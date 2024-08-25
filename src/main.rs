@@ -29,6 +29,7 @@ fn main() {
         .init_resource::<MyWorldCoords>()
         .add_systems(Update, my_cursor_system)
         .add_systems(Update, follow_mouse)
+        .add_systems(Update, follow_anchor)
         .run();
 }
 
@@ -97,5 +98,28 @@ fn follow_mouse(
         anchor.translation.x = mycoords.0.x;
         anchor.translation.y = mycoords.0.y;
 
+    }
+}
+
+fn follow_anchor(
+    mut anchor: Query<&mut Transform, With<Anchor>>,
+    mut chains: Query<&mut Transform, (With<Chain>, Without<Anchor>)>,
+    mut gizmos: Gizmos,
+){
+    let anchor = anchor.single();
+    for mut chain in chains.iter_mut() {
+        let distance = anchor.translation.distance(chain.translation);
+
+        let ray = Ray2d {
+            origin: anchor.translation.truncate(),
+            direction: Dir2::new_unchecked((chain.translation - anchor.translation).truncate().normalize()),
+        };
+
+        gizmos.line_2d(ray.origin, ray.origin + *ray.direction * distance, COLOR_WHITE);
+
+        if distance > 100.0 {
+            let new_position = ray.origin + *ray.direction * 100.0;
+            chain.translation = Vec3::new(new_position.x, new_position.y, 0.0);
+        }
     }
 }
