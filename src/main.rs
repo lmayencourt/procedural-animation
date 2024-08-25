@@ -43,7 +43,16 @@ fn setup(
         mesh: Mesh2dHandle(meshes.add(Circle{radius: 10.0})),
         material: materials.add(COLOR_BLUE),
         ..default()
-    }).insert(Anchor);
+    })
+        .insert(Anchor)
+        .with_children(|parent| {
+            parent.spawn(MaterialMesh2dBundle{
+                mesh: Mesh2dHandle(meshes.add(Annulus::new(98.0, 100.0))),
+                material: materials.add(COLOR_WHITE),
+                ..default()
+            });
+        })
+    ;
 
     commands.spawn(MaterialMesh2dBundle{
         mesh: Mesh2dHandle(meshes.add(Circle{radius: 10.0})),
