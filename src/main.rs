@@ -24,15 +24,15 @@ struct MyWorldCoords(Vec2);
 
 #[derive(Component)]
 struct Squeleton {
-    nodes: Vec<Vec3>,
+    nodes: Vec<(Vec3, f32)>,
     distance: f32,
 }
 
 impl Squeleton {
     fn new(count: usize, distance: f32) -> Self {
-        let mut nodes = Vec::<Vec3>::new();
+        let mut nodes = Vec::<(Vec3, f32)>::new();
         for n in 0..count {
-            nodes.push(Vec3::new(0.0, distance * n as f32, 0.0));
+            nodes.push((Vec3::new(0.0, distance * n as f32, 0.0), (count - n) as f32*distance/8.0));
         }
 
         Squeleton {
@@ -96,8 +96,8 @@ fn follow_mouse(
         let mut squeleton = squeleton.single_mut();
 
         if let Some(head) = squeleton.nodes.first_mut() {
-            head.x = mycoords.0.x;
-            head.y = mycoords.0.y;
+            head.0.x = mycoords.0.x;
+            head.0.y = mycoords.0.y;
         }
 
     }
@@ -115,22 +115,23 @@ fn follow_anchor(
         loop {
             if let Some(head) = iter.next() {
                 if let Some(mut tail) = iter.peek_mut() {
-                    info!("Looking at {:?} {:?}", head, tail);
-                    let distance = head.distance(**tail);
+                    debug!("Looking at {:?} {:?}", head, tail);
+
+                    let distance = head.0.distance(tail.0);
                     let ray = Ray2d {
-                        origin: head.truncate(),
-                        direction: Dir2::new_unchecked((**tail - *head).truncate().normalize()),
+                        origin: head.0.truncate(),
+                        direction: Dir2::new_unchecked((tail.0 - head.0).truncate().normalize()),
                     };
 
                     if distance > node_distance {
                         let new_position = ray.origin + *ray.direction * node_distance;
-                        tail.x = new_position.x;
-                        tail.y = new_position.y;
+                        tail.0.x = new_position.x;
+                        tail.0.y = new_position.y;
                     }
 
                     gizmos.line_2d(ray.origin, ray.origin + *ray.direction * distance, COLOR_WHITE);
-                    gizmos.circle(*head, Dir3::Z, 10.0, COLOR_WHITE);
-                    gizmos.circle(**tail, Dir3::Z, 10.0, COLOR_WHITE);
+                    gizmos.circle(head.0, Dir3::Z, head.1, COLOR_WHITE);
+                    gizmos.circle(tail.0, Dir3::Z, tail.1, COLOR_WHITE);
                 } else {
                     break;
                 }
