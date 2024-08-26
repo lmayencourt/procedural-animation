@@ -22,6 +22,26 @@ struct Chain;
 #[derive(Resource, Default)]
 struct MyWorldCoords(Vec2);
 
+#[derive(Component)]
+struct Squeleton {
+    nodes: Vec<Vec3>,
+    distance: f32,
+}
+
+impl Squeleton {
+    fn new(count: usize, distance: f32) -> Self {
+        let mut nodes = Vec::<Vec3>::new();
+        for n in 0..count {
+            nodes.push(Vec3::new(0.0, distance * n as f32, 0.0));
+        }
+
+        Squeleton {
+            distance,
+            nodes
+        }
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -40,27 +60,7 @@ fn setup(
 ){
     commands.spawn(Camera2dBundle::default());
 
-    commands.spawn(MaterialMesh2dBundle{
-        mesh: Mesh2dHandle(meshes.add(Circle{radius: 10.0})),
-        material: materials.add(COLOR_BLUE),
-        ..default()
-    })
-        .insert(Anchor)
-        .with_children(|parent| {
-            parent.spawn(MaterialMesh2dBundle{
-                mesh: Mesh2dHandle(meshes.add(Annulus::new(98.0, 100.0))),
-                material: materials.add(COLOR_WHITE),
-                ..default()
-            });
-        })
-    ;
-
-    commands.spawn(MaterialMesh2dBundle{
-        mesh: Mesh2dHandle(meshes.add(Circle{radius: 10.0})),
-        material: materials.add(COLOR_WHITE),
-        transform: Transform::from_xyz(100.0, 0.0, 0.0),
-        ..default()
-    }).insert(Chain);
+    commands.spawn(Squeleton::new(5, 50.0));
 }
 
 fn my_cursor_system(
@@ -90,36 +90,53 @@ fn my_cursor_system(
 fn follow_mouse(
     buttons: Res<ButtonInput<MouseButton>>,
     mut mycoords: ResMut<MyWorldCoords>,
-    mut anchor: Query<&mut Transform, With<Anchor>>,
+    mut squeleton: Query<&mut Squeleton>,
 ) {
     if buttons.pressed(MouseButton::Left) {
-        let mut anchor = anchor.single_mut();
+        let mut squeleton = squeleton.single_mut();
 
-        anchor.translation.x = mycoords.0.x;
-        anchor.translation.y = mycoords.0.y;
+        if let Some(head) = squeleton.nodes.first_mut() {
+            head.x = mycoords.0.x;
+            head.y = mycoords.0.y;
+        }
 
     }
 }
 
 fn follow_anchor(
-    mut anchor: Query<&mut Transform, With<Anchor>>,
-    mut chains: Query<&mut Transform, (With<Chain>, Without<Anchor>)>,
+    mut squeletons: Query<&mut Squeleton>,
     mut gizmos: Gizmos,
 ){
-    let anchor = anchor.single();
-    for mut chain in chains.iter_mut() {
-        let distance = anchor.translation.distance(chain.translation);
+    for mut squeleton in squeletons.iter_mut() {
+        
+        let node_distance = squeleton.distance;
+        let mut iter = squeleton.nodes.iter_mut().peekable();
 
-        let ray = Ray2d {
-            origin: anchor.translation.truncate(),
-            direction: Dir2::new_unchecked((chain.translation - anchor.translation).truncate().normalize()),
-        };
+        loop {
+            if let Some(head) = iter.next() {
+                if let Some(mut tail) = iter.peek_mut() {
+                    info!("Looking at {:?} {:?}", head, tail);
+                    let distance = head.distance(**tail);
+                    let ray = Ray2d {
+                        origin: head.truncate(),
+                        direction: Dir2::new_unchecked((**tail - *head).truncate().normalize()),
+                    };
 
-        gizmos.line_2d(ray.origin, ray.origin + *ray.direction * distance, COLOR_WHITE);
+                    if distance > node_distance {
+                        let new_position = ray.origin + *ray.direction * node_distance;
+                        tail.x = new_position.x;
+                        tail.y = new_position.y;
+                    }
 
-        if distance > 100.0 {
-            let new_position = ray.origin + *ray.direction * 100.0;
-            chain.translation = Vec3::new(new_position.x, new_position.y, 0.0);
+                    gizmos.line_2d(ray.origin, ray.origin + *ray.direction * distance, COLOR_WHITE);
+                    gizmos.circle(*head, Dir3::Z, 10.0, COLOR_WHITE);
+                    gizmos.circle(**tail, Dir3::Z, 10.0, COLOR_WHITE);
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
         }
     }
 }
