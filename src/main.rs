@@ -8,6 +8,7 @@ use bevy::{
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 use bevy::window::PrimaryWindow;
+use bevy_prototype_lyon::prelude::*;
 
 pub const COLOR_BLUE: Color = Color::rgb(132.0/255.0, 166.0/255.0, 199.0/255.0);
 pub const COLOR_WHITE: Color = Color::rgb(233.0/255.0, 228.0/255.0, 217.0/255.0);
@@ -45,11 +46,13 @@ impl Squeleton {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(ShapePlugin)
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
         .add_systems(Update, my_cursor_system)
         .add_systems(Update, follow_mouse)
         .add_systems(Update, follow_anchor)
+        .add_systems(Update, draw_body)
         .run();
 }
 
@@ -60,7 +63,27 @@ fn setup(
 ){
     commands.spawn(Camera2dBundle::default());
 
-    commands.spawn(Squeleton::new(5, 50.0));
+    let points = [
+        Vec2::new(-1.0, -0.3),
+        Vec2::new(1.5, 0.0),
+        Vec2::new(0.0, 1.0),
+    ]
+    .map(|x| x * 100.);
+
+    let shape = shapes::RoundedPolygon {
+        points: points.into_iter().collect(),
+        radius: 10.,
+        closed: false,
+    };
+
+    commands.spawn((
+        Squeleton::new(5, 50.0),
+        ShapeBundle {
+            path: GeometryBuilder::build_as(&shape),
+            ..default()
+        },
+        Fill::color(COLOR_BLUE),
+    ));
 }
 
 fn my_cursor_system(
@@ -140,4 +163,53 @@ fn follow_anchor(
             }
         }
     }
+}
+
+fn draw_body(
+    mut gizmos: Gizmos,
+    mut squeleton: Query<(&mut Squeleton, &mut Path)>,
+    time: Res<Time>,
+){
+    let points = [[
+        Vec3::new(-60., -120., 0.),
+        Vec3::new(-520., 380., 0.),
+        Vec3::new(520., 380., 0.),
+        Vec3::new(60., -120., 0.),
+    ]];
+
+    // Make a CubicCurve
+    let bezier = CubicBezier::new(points).to_curve();
+    gizmos.linestrip(bezier.iter_positions(50), COLOR_BLUE);
+
+    let curve = points[0];
+    for p in curve.iter() {
+        gizmos.circle_2d(p.truncate(), 5.0, COLOR_BLUE);
+    }
+
+    let (squeleton, mut path) = squeleton.single_mut();
+
+    // let t = (time.elapsed_seconds().sin() + 1.) / 2.;
+    //     if let Some(head) = squeleton.nodes.first_mut() {
+    //         head.0.x = bezier.position(t).x;
+    //         head.0.y = bezier.position(t).y;
+    //     }
+
+    let head = &squeleton.nodes[0].0;
+    let tail = &squeleton.nodes[1].1;
+    let direction = Ray2d {
+        origin: head.truncate(),
+        direction: Dir2::new_unchecked((*tail - *head).truncate().normalize()),
+    };
+
+    let mut points = Vec::<Vec2>::new();
+    for node in &squeleton.nodes {
+        points.push(node.0.truncate());
+    }
+
+    let shape = shapes::Polygon {
+        points: points.into_iter().collect(),
+        closed: false,
+    };
+
+    *path = GeometryBuilder::build_as(&shape);
 }
