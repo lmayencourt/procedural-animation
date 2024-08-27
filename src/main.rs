@@ -3,15 +3,15 @@
 */
 
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
-use bevy::window::PrimaryWindow;
 use bevy_prototype_lyon::prelude::*;
 
-pub const COLOR_BLUE: Color = Color::rgb(132.0/255.0, 166.0/255.0, 199.0/255.0);
-pub const COLOR_WHITE: Color = Color::rgb(233.0/255.0, 228.0/255.0, 217.0/255.0);
+pub const COLOR_BLUE: Color = Color::rgb(132.0 / 255.0, 166.0 / 255.0, 199.0 / 255.0);
+pub const COLOR_WHITE: Color = Color::rgb(233.0 / 255.0, 228.0 / 255.0, 217.0 / 255.0);
 
 #[derive(Component)]
 struct Anchor;
@@ -33,13 +33,13 @@ impl Squeleton {
     fn new(count: usize, distance: f32) -> Self {
         let mut nodes = Vec::<(Vec3, f32)>::new();
         for n in 0..count {
-            nodes.push((Vec3::new(0.0, distance * n as f32, 0.0), (count - n) as f32*distance/8.0));
+            nodes.push((
+                Vec3::new(0.0, distance * n as f32, 0.0),
+                (count - n) as f32 * distance / 8.0,
+            ));
         }
 
-        Squeleton {
-            distance,
-            nodes
-        }
+        Squeleton { distance, nodes }
     }
 }
 
@@ -60,7 +60,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-){
+) {
     commands.spawn(Camera2dBundle::default());
 
     let points = [
@@ -102,7 +102,8 @@ fn my_cursor_system(
 
     // check if the cursor is inside the window and get its position
     // then, ask bevy to convert into world coordinates, and truncate to discard Z
-    if let Some(world_position) = window.cursor_position()
+    if let Some(world_position) = window
+        .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate())
     {
@@ -122,16 +123,11 @@ fn follow_mouse(
             head.0.x = mycoords.0.x;
             head.0.y = mycoords.0.y;
         }
-
     }
 }
 
-fn follow_anchor(
-    mut squeletons: Query<&mut Squeleton>,
-    mut gizmos: Gizmos,
-){
+fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
     for mut squeleton in squeletons.iter_mut() {
-        
         let node_distance = squeleton.distance;
         let mut iter = squeleton.nodes.iter_mut().peekable();
 
@@ -152,7 +148,11 @@ fn follow_anchor(
                         tail.0.y = new_position.y;
                     }
 
-                    gizmos.line_2d(ray.origin, ray.origin + *ray.direction * distance, COLOR_WHITE);
+                    gizmos.line_2d(
+                        ray.origin,
+                        ray.origin + *ray.direction * distance,
+                        COLOR_WHITE,
+                    );
                     gizmos.circle(head.0, Dir3::Z, head.1, COLOR_WHITE);
                     gizmos.circle(tail.0, Dir3::Z, tail.1, COLOR_WHITE);
                 } else {
@@ -169,7 +169,7 @@ fn draw_body(
     mut gizmos: Gizmos,
     mut squeleton: Query<(&mut Squeleton, &mut Path)>,
     time: Res<Time>,
-){
+) {
     let points = [[
         Vec3::new(-60., -120., 0.),
         Vec3::new(-520., 380., 0.),
