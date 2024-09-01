@@ -2139,14 +2139,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inverse-kinematics"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_prototype_lyon",
-]
-
-[[package]]
 name = "io-kit-sys"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3078,6 +3070,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "procedural-animation"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_prototype_lyon",
 ]
 
 [[package]]
