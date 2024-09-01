@@ -39,7 +39,16 @@ struct Squeleton {
 impl Squeleton {
     fn new(count: usize, distance: f32) -> Self {
         let mut nodes = Vec::<(Vec3, f32)>::new();
-        for n in 0..count {
+        // first 1/6 nodes rises from size to create an head like shape
+        let nose = count/6;
+        for n in 0..nose {
+            nodes.push((
+                Vec3::new(0.0, distance * n as f32, 0.0),
+                (n + count - nose) as f32 * distance / 8.0,
+            ));
+        }
+        // Then we have the body linearly decreasing in size
+        for n in nose..count {
             nodes.push((
                 Vec3::new(0.0, distance * n as f32, 0.0),
                 (count - n) as f32 * distance / 8.0,
