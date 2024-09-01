@@ -4,6 +4,8 @@ This repo contains the code to generate animated creatures based on *procedural 
 
 This project implement in Rust the concept showed in the [A simple procedural animation technique](https://www.youtube.com/watch?v=qlfh_rv6khY).
 
+Try it [online](https://lmayencourt.github.io/procedural-animation/) !
+
 ## Requirements overview
 Essential features are :
 - Different kind of creature can be animated (fish, reptile, mollusc, ...)
