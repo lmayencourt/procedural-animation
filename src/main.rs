@@ -15,6 +15,7 @@ pub const COLOR_LIGHT_BLUE: Color = Color::rgb(175.0 / 255.0, 188.0 / 255.0, 198
 pub const COLOR_GREEN: Color = Color::rgb(175.0 / 255.0, 192.0 / 255.0, 130.0 / 255.0);
 pub const COLOR_RED: Color = Color::rgb(159.0 / 255.0, 75.0 / 255.0, 63.0 / 255.0);
 pub const COLOR_WHITE: Color = Color::rgb(233.0 / 255.0, 228.0 / 255.0, 217.0 / 255.0);
+pub const COLOR_BLACK: Color = Color::rgb(58.0 / 255.0, 59.0 / 255.0, 59.0 / 255.0);
 
 #[derive(Component)]
 struct Anchor;
@@ -64,7 +65,7 @@ impl Squeleton {
 }
 
 #[derive(Default)]
-enum FinPosition {
+enum BodyPartPosition {
     #[default]
     Dorsal,
     Left,
@@ -74,7 +75,13 @@ enum FinPosition {
 #[derive(Component, Default)]
 struct Fin {
     anchor: usize,
-    position: FinPosition,
+    position: BodyPartPosition,
+}
+
+#[derive(Component)]
+struct Eye {
+    anchor: usize,
+    position: BodyPartPosition,
 }
 
 fn main() {
@@ -88,6 +95,7 @@ fn main() {
         .add_systems(Update, follow_anchor)
         .add_systems(Update, draw_body)
         .add_systems(Update, draw_fin)
+        .add_systems(Update, draw_eye)
         .add_systems(Update, enable_gizmos)
         .run();
 }
@@ -126,7 +134,7 @@ fn setup(
             parent.spawn((
                 Fin {
                     anchor: 5,
-                    position: FinPosition::Left,
+                    position: BodyPartPosition::Left,
                 },
                 MaterialMesh2dBundle {
                     mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
@@ -137,7 +145,7 @@ fn setup(
             parent.spawn((
                 Fin {
                     anchor: 5,
-                    position: FinPosition::Right,
+                    position: BodyPartPosition::Right,
                 },
                 MaterialMesh2dBundle {
                     mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
@@ -148,7 +156,7 @@ fn setup(
             parent.spawn((
                 Fin {
                     anchor: 7,
-                    position: FinPosition::Dorsal,
+                    position: BodyPartPosition::Dorsal,
                 },
                 MaterialMesh2dBundle {
                     mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 25.0))),
@@ -159,7 +167,7 @@ fn setup(
             parent.spawn((
                 Fin {
                     anchor: 18,
-                    position: FinPosition::Left,
+                    position: BodyPartPosition::Left,
                 },
                 MaterialMesh2dBundle {
                     mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
@@ -170,11 +178,34 @@ fn setup(
             parent.spawn((
                 Fin {
                     anchor: 18,
-                    position: FinPosition::Right,
+                    position: BodyPartPosition::Right,
                 },
                 MaterialMesh2dBundle {
                     mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
                     material: materials.add(COLOR_LIGHT_BLUE),
+                    ..default()
+                },
+            ));
+            // Draw Eye
+            parent.spawn((
+                Eye {
+                    anchor: 2,
+                    position: BodyPartPosition::Left,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(3.0, 6.0))),
+                    material: materials.add(COLOR_BLACK),
+                    ..default()
+                },
+            ));
+            parent.spawn((
+                Eye {
+                    anchor: 2,
+                    position: BodyPartPosition::Right,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(3.0, 6.0))),
+                    material: materials.add(COLOR_BLACK),
                     ..default()
                 },
             ));
@@ -390,46 +421,99 @@ fn draw_fin(
 ) {
     for (squeleton, mut children) in q_squeleton.iter_mut() {
         for &child in children.iter() {
-            let (fin, mut transform) = q_fins.get_mut(child).unwrap();
-
-            let anchor_node = squeleton.nodes[fin.anchor];
-            let anchor_head = squeleton.nodes[fin.anchor - 1];
-
-            let distance = anchor_head.0.distance(anchor_node.0);
-            let ray = Ray2d {
-                origin: anchor_head.0.truncate(),
-                direction: Dir2::new_unchecked(
-                    (anchor_node.0 - anchor_head.0).truncate().normalize(),
-                ),
-            };
-
-            let left = ray.origin + ray.direction.perp() * anchor_node.1;
-            let right = ray.origin + -ray.direction.perp() * anchor_node.1;
-
-            gizmos.line_2d(
-                ray.origin,
-                ray.origin + *ray.direction * distance,
-                COLOR_GREEN,
-            );
-
-            match fin.position {
-                FinPosition::Dorsal => {
-                    transform.translation = anchor_node.0;
-                    transform.translation.z = 1.0;
-                    let angle = ray.direction.to_angle();
-                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI / 2.0);
-                }
-                FinPosition::Left => {
-                    transform.translation = left.extend(-1.0);
-                    let angle = ray.direction.to_angle();
-                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI / 5.0);
-                }
-                FinPosition::Right => {
-                    transform.translation = right.extend(-1.0);
-                    let angle = ray.direction.to_angle();
-                    transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI / 5.0);
+            if let Ok((fin, mut transform)) = q_fins.get_mut(child) {
+                let anchor_node = squeleton.nodes[fin.anchor];
+                let anchor_head = squeleton.nodes[fin.anchor - 1];
+    
+                let distance = anchor_head.0.distance(anchor_node.0);
+                let ray = Ray2d {
+                    origin: anchor_head.0.truncate(),
+                    direction: Dir2::new_unchecked(
+                        (anchor_node.0 - anchor_head.0).truncate().normalize(),
+                    ),
+                };
+    
+                let left = ray.origin + ray.direction.perp() * anchor_node.1;
+                let right = ray.origin + -ray.direction.perp() * anchor_node.1;
+    
+                gizmos.line_2d(
+                    ray.origin,
+                    ray.origin + *ray.direction * distance,
+                    COLOR_GREEN,
+                );
+    
+                match fin.position {
+                    BodyPartPosition::Dorsal => {
+                        transform.translation = anchor_node.0;
+                        transform.translation.z = 1.0;
+                        let angle = ray.direction.to_angle();
+                        transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
+                    }
+                    BodyPartPosition::Left => {
+                        transform.translation = left.extend(-1.0);
+                        let angle = ray.direction.to_angle();
+                        transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI / 5.0);
+                    }
+                    BodyPartPosition::Right => {
+                        transform.translation = right.extend(-1.0);
+                        let angle = ray.direction.to_angle();
+                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI / 5.0);
+                    }
                 }
             }
+
+        }
+    }
+}
+
+fn draw_eye (
+    mut gizmos: Gizmos,
+    mut q_squeleton: Query<(&Squeleton, &mut Children)>,
+    mut q_eye: Query<(&Eye, &mut Transform)>,
+) {
+    for (squeleton, mut children) in q_squeleton.iter_mut() {
+        for &child in children.iter() {
+            if let Ok((eye, mut transform)) = q_eye.get_mut(child) {
+                let anchor_node = squeleton.nodes[eye.anchor];
+                let anchor_head = squeleton.nodes[eye.anchor - 1];
+    
+                let distance = anchor_head.0.distance(anchor_node.0);
+                let ray = Ray2d {
+                    origin: anchor_head.0.truncate(),
+                    direction: Dir2::new_unchecked(
+                        (anchor_node.0 - anchor_head.0).truncate().normalize(),
+                    ),
+                };
+    
+                let left = ray.origin + ray.direction.perp() * anchor_node.1 * 0.75;
+                let right = ray.origin + -ray.direction.perp() * anchor_node.1 *0.75;
+    
+                gizmos.line_2d(
+                    ray.origin,
+                    ray.origin + *ray.direction * distance,
+                    COLOR_GREEN,
+                );
+
+                match eye.position {
+                    BodyPartPosition::Dorsal => {
+                        transform.translation = anchor_node.0;
+                        transform.translation.z = 1.0;
+                        let angle = ray.direction.to_angle();
+                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2);
+                    }
+                    BodyPartPosition::Left => {
+                        transform.translation = left.extend(1.0);
+                        let angle = ray.direction.to_angle();
+                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 + 0.2);
+                    }
+                    BodyPartPosition::Right => {
+                        transform.translation = right.extend(1.0);
+                        let angle = ray.direction.to_angle();
+                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 - 0.2);
+                    }
+                }
+            }
+
         }
     }
 }
