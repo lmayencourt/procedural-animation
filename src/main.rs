@@ -11,6 +11,9 @@ use bevy::{
 use bevy_prototype_lyon::prelude::*;
 
 pub const COLOR_BLUE: Color = Color::rgb(132.0 / 255.0, 166.0 / 255.0, 199.0 / 255.0);
+pub const COLOR_LIGHT_BLUE: Color = Color::rgb(175.0 / 255.0, 188.0 / 255.0, 198.0 / 255.0);
+pub const COLOR_GREEN: Color = Color::rgb(175.0 / 255.0, 192.0 / 255.0, 130.0 / 255.0);
+pub const COLOR_RED: Color = Color::rgb(159.0 / 255.0, 75.0 / 255.0, 63.0 / 255.0);
 pub const COLOR_WHITE: Color = Color::rgb(233.0 / 255.0, 228.0 / 255.0, 217.0 / 255.0);
 
 #[derive(Component)]
@@ -47,6 +50,12 @@ impl Squeleton {
     }
 }
 
+#[derive(Component, Default)]
+struct Fin {
+    anchor: usize,
+    on_left: bool,
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -57,6 +66,7 @@ fn main() {
         .add_systems(Update, follow_mouse)
         .add_systems(Update, follow_anchor)
         .add_systems(Update, draw_body)
+        .add_systems(Update, draw_fin)
         .add_systems(Update, enable_gizmos)
         .run();
 }
@@ -89,7 +99,31 @@ fn setup(
             ..default()
         },
         Fill::color(COLOR_BLUE),
-    ));
+    )).with_children( |parent| {
+        parent.spawn((
+            Fin {
+                anchor: 5,
+                on_left: true,
+            },
+            MaterialMesh2dBundle {
+                mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
+                material: materials.add(COLOR_LIGHT_BLUE),
+                ..default()
+            }
+        ));
+        parent.spawn((
+            Fin {
+                anchor: 5,
+                on_left: false,
+            },
+            MaterialMesh2dBundle {
+                mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
+                material: materials.add(COLOR_LIGHT_BLUE),
+                ..default()
+            }
+        ));
+        }
+    );
 
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
@@ -135,7 +169,10 @@ fn follow_mouse(
     }
 }
 
-fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
+fn follow_anchor(
+    mut squeletons: Query<&mut Squeleton>,
+    mut gizmos: Gizmos,
+) {
     for mut squeleton in squeletons.iter_mut() {
         let node_distance = squeleton.distance;
         let mut iter = squeleton.nodes.iter_mut().peekable();
@@ -291,6 +328,46 @@ fn draw_body(
             },
             Skin,
         ));
+    }
+}
+
+fn draw_fin(
+    mut gizmos: Gizmos,
+    mut q_squeleton: Query<(&Squeleton, &mut Children)>,
+    mut q_fins: Query<(&Fin, &mut Transform)>,
+) {
+    for (squeleton, mut children) in q_squeleton.iter_mut() {
+        for &child in children.iter() {
+            let (fin, mut transform) = q_fins.get_mut(child).unwrap();
+
+            let anchor_node = squeleton.nodes[fin.anchor];
+            let anchor_head = squeleton.nodes[fin.anchor-1];
+
+            let distance = anchor_head.0.distance(anchor_node.0);
+            let ray = Ray2d {
+                origin: anchor_head.0.truncate(),
+                direction: Dir2::new_unchecked((anchor_node.0 - anchor_head.0).truncate().normalize()),
+            };
+
+            let left = ray.origin + ray.direction.perp() * anchor_node.1;
+            let right = ray.origin + -ray.direction.perp() * anchor_node.1;
+
+            gizmos.line_2d(
+                ray.origin,
+                ray.origin + *ray.direction * distance,
+                COLOR_GREEN,
+            );
+
+            if fin.on_left {
+                transform.translation = left.extend(-1.0);
+                let angle = ray.direction.to_angle();
+                transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/5.0);
+            } else {
+                transform.translation = right.extend(-1.0);
+                let angle = ray.direction.to_angle();
+                transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI/5.0);
+            }
+        }
     }
 }
 
