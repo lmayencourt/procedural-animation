@@ -24,6 +24,9 @@ struct Chain;
 struct MyWorldCoords(Vec2);
 
 #[derive(Component)]
+struct Skin;
+
+#[derive(Component)]
 struct Squeleton {
     nodes: Vec<(Vec3, f32)>,
     distance: f32,
@@ -78,7 +81,7 @@ fn setup(
     };
 
     commands.spawn((
-        Squeleton::new(5, 50.0),
+        Squeleton::new(20, 12.0),
         ShapeBundle {
             path: GeometryBuilder::build_as(&shape),
             ..default()
@@ -153,13 +156,13 @@ fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
                         tail.0.y = new_position.y;
                     }
 
-                    gizmos.line_2d(
-                        ray.origin,
-                        ray.origin + *ray.direction * distance,
-                        COLOR_WHITE,
-                    );
-                    gizmos.circle_2d(head.0.truncate(), head.1, COLOR_WHITE);
-                    gizmos.circle_2d(tail.0.truncate(), tail.1, COLOR_WHITE);
+                    // gizmos.line_2d(
+                    //     ray.origin,
+                    //     ray.origin + *ray.direction * distance,
+                    //     COLOR_WHITE,
+                    // );
+                    // // gizmos.circle_2d(head.0.truncate(), head.1, COLOR_WHITE);
+                    // gizmos.circle_2d(tail.0.truncate(), tail.1, COLOR_WHITE);
 
                     // Compute the skin points
                     let front = ray.origin + -*ray.direction * head.1;
@@ -172,9 +175,9 @@ fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
                     skin_head_tail.push(front);
                     skin_head_tail.push(back);
 
-                    gizmos.circle_2d(front, 5.0, COLOR_WHITE);
-                    gizmos.circle_2d(left, 5.0, COLOR_WHITE);
-                    gizmos.circle_2d(right, 5.0, COLOR_BLUE);
+                    // gizmos.circle_2d(front, 5.0, COLOR_WHITE);
+                    // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
+                    // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
                 } else {
                     break;
                 }
@@ -201,9 +204,9 @@ fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
                 skin_right.push(right);
                 skin_head_tail.push(back);
 
-                gizmos.circle_2d(back, 5.0, COLOR_WHITE);
-                gizmos.circle_2d(left, 5.0, COLOR_WHITE);
-                gizmos.circle_2d(right, 5.0, COLOR_BLUE);
+                // gizmos.circle_2d(back, 5.0, COLOR_WHITE);
+                // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
+                // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
             }
         }
 
@@ -225,6 +228,10 @@ fn draw_body(
     mut gizmos: Gizmos,
     mut squeleton: Query<(&mut Squeleton, &mut Path)>,
     time: Res<Time>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    skins: Query<Entity, With<Skin>>,
 ) {
     let points = [[
         Vec3::new(-60., -120., 0.),
@@ -250,31 +257,7 @@ fn draw_body(
     //         head.0.y = bezier.position(t).y;
     //     }
 
-    // let head = &squeleton.nodes[0].0;
-    // let tail = &squeleton.nodes[1].0;
-
-    // gizmos.line_2d(
-    //     direction.origin,
-    //     direction.origin + *direction.direction * squeleton.nodes[0].1,
-    //     COLOR_WHITE,
-    // );
-
     let mut points = Vec::<Vec2>::new();
-    // for node in &squeleton.skin {
-        // points.push(node.0.truncate());
-
-        // let direction = Ray2d {
-        //     origin: head.truncate(),
-        //     direction: -Dir2::new_unchecked((*tail - *head).truncate().normalize()),
-        // };
-
-        // let front = direction.origin + *direction.direction * node.1;
-        // let left = direction.origin + direction.direction.perp() * node.1;
-        // let right = direction.origin + -direction.direction.perp() * node.1;
-        // gizmos.circle_2d(front, 5.0, COLOR_WHITE);
-        // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
-        // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
-    // }
 
     let points = squeleton.skin.clone();
 
@@ -284,4 +267,24 @@ fn draw_body(
     };
 
     *path = GeometryBuilder::build_as(&shape);
+
+    // Clear all the preview skin shapes
+    // This is really not efficient as we re-create every circle at every frame....
+    let skins = skins.into_iter();
+
+    for skin in skins {
+        commands.entity(skin).despawn();
+    }
+
+    for node in &squeleton.nodes {
+        commands.spawn((
+            MaterialMesh2dBundle {
+                mesh: Mesh2dHandle(meshes.add(Circle{radius:node.1})),
+                material: materials.add(COLOR_BLUE),
+                transform : Transform::from_translation(node.0),
+                ..default()
+            },
+            Skin,
+        ));
+    }
 }
