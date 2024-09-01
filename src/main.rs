@@ -57,6 +57,7 @@ fn main() {
         .add_systems(Update, follow_mouse)
         .add_systems(Update, follow_anchor)
         .add_systems(Update, draw_body)
+        .add_systems(Update, enable_gizmos)
         .run();
 }
 
@@ -64,6 +65,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut config_store: ResMut<GizmoConfigStore>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
@@ -88,6 +90,9 @@ fn setup(
         },
         Fill::color(COLOR_BLUE),
     ));
+
+    let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
+    config.enabled = false;
 }
 
 fn my_cursor_system(
@@ -156,13 +161,13 @@ fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
                         tail.0.y = new_position.y;
                     }
 
-                    // gizmos.line_2d(
-                    //     ray.origin,
-                    //     ray.origin + *ray.direction * distance,
-                    //     COLOR_WHITE,
-                    // );
-                    // // gizmos.circle_2d(head.0.truncate(), head.1, COLOR_WHITE);
-                    // gizmos.circle_2d(tail.0.truncate(), tail.1, COLOR_WHITE);
+                    gizmos.line_2d(
+                        ray.origin,
+                        ray.origin + *ray.direction * distance,
+                        COLOR_WHITE,
+                    );
+                    gizmos.circle_2d(head.0.truncate(), head.1, COLOR_WHITE);
+                    gizmos.circle_2d(tail.0.truncate(), tail.1, COLOR_WHITE);
 
                     // Compute the skin points
                     let front = ray.origin + -*ray.direction * head.1;
@@ -175,9 +180,9 @@ fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
                     skin_head_tail.push(front);
                     skin_head_tail.push(back);
 
-                    // gizmos.circle_2d(front, 5.0, COLOR_WHITE);
-                    // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
-                    // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
+                    gizmos.circle_2d(front, 5.0, COLOR_WHITE);
+                    gizmos.circle_2d(left, 5.0, COLOR_WHITE);
+                    gizmos.circle_2d(right, 5.0, COLOR_BLUE);
                 } else {
                     break;
                 }
@@ -204,9 +209,9 @@ fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
                 skin_right.push(right);
                 skin_head_tail.push(back);
 
-                // gizmos.circle_2d(back, 5.0, COLOR_WHITE);
-                // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
-                // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
+                gizmos.circle_2d(back, 5.0, COLOR_WHITE);
+                gizmos.circle_2d(left, 5.0, COLOR_WHITE);
+                gizmos.circle_2d(right, 5.0, COLOR_BLUE);
             }
         }
 
@@ -287,4 +292,16 @@ fn draw_body(
             Skin,
         ));
     }
+}
+
+fn enable_gizmos(
+    mut config_store: ResMut<GizmoConfigStore>,
+    keyboard: Res<ButtonInput<KeyCode>>,
+) {
+    let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
+
+    if keyboard.just_pressed(KeyCode::KeyD) {
+        config.enabled ^= true;
+    }
+
 }
