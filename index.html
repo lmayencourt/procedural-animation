@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <title>Inverted Pendulum</title>
+    
+<link rel="modulepreload" href="./procedural-animation-fc3a2b0d49d56158.js" crossorigin=anonymous integrity="sha384-aof1KRfMqdbL+96bKWcsaJLab+E8Ag/T7GBHIik8G/tco3TvsO1aQwfqQohi/QF7">
+<link rel="preload" href="./procedural-animation-fc3a2b0d49d56158_bg.wasm" crossorigin=anonymous integrity="sha384-5qnjr1eIhQY46awh06HwzlyB6WZ6Imcj4lVxmHdDPCct2enZz2Aw+pfj/8+Ipc42" as="fetch" type="application/wasm"></head>
+    <body>
+        <div class="game-container">
+            <div class="lds-dual-ring"></div>
+            <canvas id="bevy">
+                Javascript and support for canvas is required
+            </canvas>
+        </div>
+    
+<script type="module" nonce="Ce45t9YTnsYHd3OagnOx7g==">
+import init, * as bindings from './procedural-animation-fc3a2b0d49d56158.js';
+const wasm = await init('./procedural-animation-fc3a2b0d49d56158_bg.wasm');
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
