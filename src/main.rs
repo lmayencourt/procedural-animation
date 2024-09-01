@@ -46,7 +46,11 @@ impl Squeleton {
             ));
         }
 
-        Squeleton { distance, nodes , skin:Vec::new()}
+        Squeleton {
+            distance,
+            nodes,
+            skin: Vec::new(),
+        }
     }
 }
 
@@ -100,71 +104,72 @@ fn setup(
         closed: false,
     };
 
-    commands.spawn((
-        Squeleton::new(20, 12.0),
-        ShapeBundle {
-            path: GeometryBuilder::build_as(&shape),
-            ..default()
-        },
-        Fill::color(COLOR_BLUE),
-    )).with_children( |parent| {
-        parent.spawn((
-            Fin {
-                anchor: 5,
-                position: FinPosition::Left,
-            },
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
-                material: materials.add(COLOR_LIGHT_BLUE),
+    commands
+        .spawn((
+            Squeleton::new(20, 12.0),
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shape),
                 ..default()
-            }
-        ));
-        parent.spawn((
-            Fin {
-                anchor: 5,
-                position: FinPosition::Right,
             },
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
-                material: materials.add(COLOR_LIGHT_BLUE),
-                ..default()
-            }
-        ));
-        parent.spawn((
-            Fin {
-                anchor: 7,
-                position: FinPosition::Dorsal,
-            },
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 25.0))),
-                material: materials.add(COLOR_LIGHT_BLUE),
-                ..default()
-            }
-        ));
-        parent.spawn((
-            Fin {
-                anchor: 18,
-                position: FinPosition::Left,
-            },
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
-                material: materials.add(COLOR_LIGHT_BLUE),
-                ..default()
-            }
-        ));
-        parent.spawn((
-            Fin {
-                anchor: 18,
-                position: FinPosition::Right,
-            },
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
-                material: materials.add(COLOR_LIGHT_BLUE),
-                ..default()
-            }
-        ));
-        }
-    );
+            Fill::color(COLOR_BLUE),
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Fin {
+                    anchor: 5,
+                    position: FinPosition::Left,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
+                    material: materials.add(COLOR_LIGHT_BLUE),
+                    ..default()
+                },
+            ));
+            parent.spawn((
+                Fin {
+                    anchor: 5,
+                    position: FinPosition::Right,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
+                    material: materials.add(COLOR_LIGHT_BLUE),
+                    ..default()
+                },
+            ));
+            parent.spawn((
+                Fin {
+                    anchor: 7,
+                    position: FinPosition::Dorsal,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 25.0))),
+                    material: materials.add(COLOR_LIGHT_BLUE),
+                    ..default()
+                },
+            ));
+            parent.spawn((
+                Fin {
+                    anchor: 18,
+                    position: FinPosition::Left,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
+                    material: materials.add(COLOR_LIGHT_BLUE),
+                    ..default()
+                },
+            ));
+            parent.spawn((
+                Fin {
+                    anchor: 18,
+                    position: FinPosition::Right,
+                },
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
+                    material: materials.add(COLOR_LIGHT_BLUE),
+                    ..default()
+                },
+            ));
+        });
 
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
@@ -210,10 +215,7 @@ fn follow_mouse(
     }
 }
 
-fn follow_anchor(
-    mut squeletons: Query<&mut Squeleton>,
-    mut gizmos: Gizmos,
-) {
+fn follow_anchor(mut squeletons: Query<&mut Squeleton>, mut gizmos: Gizmos) {
     for mut squeleton in squeletons.iter_mut() {
         let node_distance = squeleton.distance;
         let mut iter = squeleton.nodes.iter_mut().peekable();
@@ -362,9 +364,9 @@ fn draw_body(
     for node in &squeleton.nodes {
         commands.spawn((
             MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Circle{radius:node.1})),
+                mesh: Mesh2dHandle(meshes.add(Circle { radius: node.1 })),
                 material: materials.add(COLOR_BLUE),
-                transform : Transform::from_translation(node.0),
+                transform: Transform::from_translation(node.0),
                 ..default()
             },
             Skin,
@@ -382,12 +384,14 @@ fn draw_fin(
             let (fin, mut transform) = q_fins.get_mut(child).unwrap();
 
             let anchor_node = squeleton.nodes[fin.anchor];
-            let anchor_head = squeleton.nodes[fin.anchor-1];
+            let anchor_head = squeleton.nodes[fin.anchor - 1];
 
             let distance = anchor_head.0.distance(anchor_node.0);
             let ray = Ray2d {
                 origin: anchor_head.0.truncate(),
-                direction: Dir2::new_unchecked((anchor_node.0 - anchor_head.0).truncate().normalize()),
+                direction: Dir2::new_unchecked(
+                    (anchor_node.0 - anchor_head.0).truncate().normalize(),
+                ),
             };
 
             let left = ray.origin + ray.direction.perp() * anchor_node.1;
@@ -404,31 +408,27 @@ fn draw_fin(
                     transform.translation = anchor_node.0;
                     transform.translation.z = 1.0;
                     let angle = ray.direction.to_angle();
-                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/2.0);
+                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI / 2.0);
                 }
                 FinPosition::Left => {
                     transform.translation = left.extend(-1.0);
                     let angle = ray.direction.to_angle();
-                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/5.0);
+                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI / 5.0);
                 }
                 FinPosition::Right => {
                     transform.translation = right.extend(-1.0);
                     let angle = ray.direction.to_angle();
-                    transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI/5.0);
+                    transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI / 5.0);
                 }
             }
         }
     }
 }
 
-fn enable_gizmos(
-    mut config_store: ResMut<GizmoConfigStore>,
-    keyboard: Res<ButtonInput<KeyCode>>,
-) {
+fn enable_gizmos(mut config_store: ResMut<GizmoConfigStore>, keyboard: Res<ButtonInput<KeyCode>>) {
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
 
     if keyboard.just_pressed(KeyCode::KeyD) {
         config.enabled ^= true;
     }
-
 }
