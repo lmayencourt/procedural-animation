@@ -50,10 +50,18 @@ impl Squeleton {
     }
 }
 
+#[derive(Default)]
+enum FinPosition {
+    #[default]
+    Dorsal,
+    Left,
+    Right,
+}
+
 #[derive(Component, Default)]
 struct Fin {
     anchor: usize,
-    on_left: bool,
+    position: FinPosition,
 }
 
 fn main() {
@@ -103,7 +111,7 @@ fn setup(
         parent.spawn((
             Fin {
                 anchor: 5,
-                on_left: true,
+                position: FinPosition::Left,
             },
             MaterialMesh2dBundle {
                 mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
@@ -114,10 +122,43 @@ fn setup(
         parent.spawn((
             Fin {
                 anchor: 5,
-                on_left: false,
+                position: FinPosition::Right,
             },
             MaterialMesh2dBundle {
                 mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
+                material: materials.add(COLOR_LIGHT_BLUE),
+                ..default()
+            }
+        ));
+        parent.spawn((
+            Fin {
+                anchor: 7,
+                position: FinPosition::Dorsal,
+            },
+            MaterialMesh2dBundle {
+                mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 25.0))),
+                material: materials.add(COLOR_LIGHT_BLUE),
+                ..default()
+            }
+        ));
+        parent.spawn((
+            Fin {
+                anchor: 18,
+                position: FinPosition::Left,
+            },
+            MaterialMesh2dBundle {
+                mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
+                material: materials.add(COLOR_LIGHT_BLUE),
+                ..default()
+            }
+        ));
+        parent.spawn((
+            Fin {
+                anchor: 18,
+                position: FinPosition::Right,
+            },
+            MaterialMesh2dBundle {
+                mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
                 material: materials.add(COLOR_LIGHT_BLUE),
                 ..default()
             }
@@ -358,14 +399,23 @@ fn draw_fin(
                 COLOR_GREEN,
             );
 
-            if fin.on_left {
-                transform.translation = left.extend(-1.0);
-                let angle = ray.direction.to_angle();
-                transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/5.0);
-            } else {
-                transform.translation = right.extend(-1.0);
-                let angle = ray.direction.to_angle();
-                transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI/5.0);
+            match fin.position {
+                FinPosition::Dorsal => {
+                    transform.translation = anchor_node.0;
+                    transform.translation.z = 1.0;
+                    let angle = ray.direction.to_angle();
+                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/2.0);
+                }
+                FinPosition::Left => {
+                    transform.translation = left.extend(-1.0);
+                    let angle = ray.direction.to_angle();
+                    transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/5.0);
+                }
+                FinPosition::Right => {
+                    transform.translation = right.extend(-1.0);
+                    let angle = ray.direction.to_angle();
+                    transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI/5.0);
+                }
             }
         }
     }
