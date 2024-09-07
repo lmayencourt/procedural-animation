@@ -2,13 +2,16 @@
 * Copyright (c) 2024 Louis Mayencourt
 */
 
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
+    window::PrimaryWindow,
 };
 use bevy_prototype_lyon::prelude::*;
+
+mod water_effect;
+
+use water_effect::WaterEffectPlugin;
 
 pub const COLOR_BLUE: Color = Color::rgb(132.0 / 255.0, 166.0 / 255.0, 199.0 / 255.0);
 pub const COLOR_LIGHT_BLUE: Color = Color::rgb(175.0 / 255.0, 188.0 / 255.0, 198.0 / 255.0);
@@ -84,9 +87,11 @@ struct Eye {
     position: BodyPartPosition,
 }
 
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(WaterEffectPlugin)
         .add_plugins(ShapePlugin)
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
