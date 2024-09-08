@@ -1,6 +1,5 @@
 #import bevy_sprite::mesh2d_vertex_output::VertexOutput
-// #import bevy_pbr::mesh_view_bindings::globals
-
+// Needed to access the globals variable like time
 #import bevy_render::globals::Globals
 @group(0) @binding(1) var<uniform> globals: Globals;
 
@@ -42,31 +41,51 @@ fn perlin_noise_2d(P: vec2<f32>) -> f32 {
 
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
-    // let color_a = vec3(0.282, 0.51, 1.0);
-    // let color_b = vec3(0.725, 0.816, 0.698);
-    // let mixed = mix(color_a, color_b, f);
-    
-    // return vec4<f32>(in.uv, 0.0, 1.0);
-    // return vec4<f32>(in.world_position.x, , 1.0);
 
-    // UV is the "clip" position from 0 to 1 of the "vertex", which is the pixel equivalent
-    // This draw a green red to yellow square.
-    // return vec4<f32>(in.uv.x, in.uv.y, 0.0, 1.0);
-    
-    let speed = 0.08;
-    let time = globals.time * speed;
-    var color = vec4<f32>(0., 0., 0., 0.);
-    for(var i:u32=20; i<21; i++) {
-        let timed_uv = in.uv.xy + vec2<f32>(sin(time), cos(time));
-        let noise = perlin_noise_2d(timed_uv * f32(i));
-        color += vec4<f32>(noise, noise, noise*1.7, noise);
+    // Parameters that affect the speed of the foam
+    //
+    let foam_speed_x = 0.2;
+    let foam_speed_y = 0.07;
+    // moving coordinate
+    let timed_uv = in.uv.xy + vec2(sin(globals.time * foam_speed_x), cos(globals.time * foam_speed_y));
+
+    // Parameters that affect the size fo the foam
+    //
+    // First component of the water foam
+    // Smaller values result in bigger patch
+    let noise_scale = 7.0;
+    // limit value for the foam in the noise texture
+    // small value result in bigger foams
+    let edge = 0.5;
+    // speed of the variation of size fo the foam
+    let edge_size_speed = 0.5;
+    // Size of the variation of size
+    let edge_size_scale = 0.2;
+    let edge_offset = 0.;
+    let timed_edge = edge + (sin(globals.time * edge_size_speed) + edge_offset) * edge_size_scale;
+    // width of the foam lines
+    let edge_width = 0.06;
+
+    // Multi-level perlin noise
+    var noise_value = perlin_noise_2d(timed_uv*noise_scale);
+    noise_value -= perlin_noise_2d(timed_uv*noise_scale*2.0) * 0.4 * sin(globals.time* .8);
+    noise_value -= perlin_noise_2d(timed_uv*noise_scale*3.0) * 0.2 * sin(globals.time* .4);
+
+    // Wave top
+    var wave_top = step(timed_edge, noise_value);
+
+    // edge of the foam
+    let foam_offset = 0.2;
+    var foam_edges = step(timed_edge -foam_offset, noise_value);
+    foam_edges -= step(timed_edge -foam_offset + edge_width*1.0, noise_value);
+
+    let foam = wave_top + foam_edges;
+
+    // Affect the noise to the pixel color
+    var color = vec4(0., 0., 0., 0.);
+    if foam >= 1. {
+      color = vec4(foam, foam, foam, 0.4);
     }
 
-    // let noise_value = perlin_noise_2d(in.uv.xy*20.0);
-    // let color = vec4<f32>(noise_value, noise_value, noise_value*1.7, noise_value);
     return color;
-
-    // return vec4(1.0, t_1, 0.0, 1.0);
-
-    // return vec4(1.0, 1.0, 1.0, 0.5);
 }
