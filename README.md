@@ -1,5 +1,7 @@
 # Procedural animation
 
+[![deploy-github-page](https://github.com/lmayencourt/procedural-animation/actions/workflows/deploy-page.yaml/badge.svg)](https://github.com/lmayencourt/procedural-animation/actions/workflows/deploy-page.yaml)
+
 This repo contains the code to generate animated creatures based on *procedural animation*.
 
 This project implement in Rust the concept showed in the [A simple procedural animation technique](https://www.youtube.com/watch?v=qlfh_rv6khY).
