@@ -5,7 +5,7 @@
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
-    window::PrimaryWindow,
+    window::{PrimaryWindow, WindowResized},
 };
 use bevy_prototype_lyon::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
@@ -33,6 +33,7 @@ fn main() {
         .add_systems(Update, my_cursor_system)
         .add_systems(Update, follow_mouse)
         .add_systems(Update, enable_gizmos)
+        .add_systems(Update, adapt_windows_size)
         .run();
 }
 
@@ -91,5 +92,15 @@ fn enable_gizmos(mut config_store: ResMut<GizmoConfigStore>, keyboard: Res<Butto
 
     if keyboard.just_pressed(KeyCode::KeyD) {
         config.enabled ^= true;
+    }
+}
+
+fn adapt_windows_size(
+    mut q_window: Query<&mut Window, With<PrimaryWindow>>,
+    mut resize_reader: EventReader<WindowResized>,
+) {
+    for event in resize_reader.read() {
+        let mut window = q_window.single_mut();
+        window.resolution.set(event.width, event.height);
     }
 }
