@@ -8,6 +8,7 @@ use crate::corbusier_colors::*;
 
 #[derive(Component)]
 pub struct KinematicChain {
+    pub anchor: Option<Vec3>,
     pub target: Vec3,
     pub nodes: Vec<(Vec3, f32)>,
     pub distance: f32,
@@ -15,7 +16,7 @@ pub struct KinematicChain {
 }
 
 impl KinematicChain {
-    pub fn new(count: usize, distance: f32) -> Self {
+    pub fn new(count: usize, distance: f32, anchor: Option<Vec3>) -> Self {
         let mut nodes = Vec::<(Vec3, f32)>::new();
         // first 1/6 nodes rises from size to create an head like shape
         let nose = count/6;
@@ -34,7 +35,8 @@ impl KinematicChain {
         }
 
         KinematicChain {
-            target: Vec3::splat(0.0),
+            anchor,
+            target: Vec3::new(200.0, 0.0, 0.0),
             distance,
             nodes,
             skin: Vec::new(),
@@ -46,7 +48,6 @@ pub fn reach_target(
     mut squeletons: Query<&mut KinematicChain>,
     mut gizmos: Gizmos,
 ) {
-    // for now directly assign target to head
     for mut squeleton in squeletons.iter_mut() {
         let target = squeleton.target;
         if let Some(head) = squeleton.nodes.first_mut() {
@@ -54,6 +55,15 @@ pub fn reach_target(
         }
 
         forward_kinematics(&mut squeleton, &mut gizmos);
+
+        if let Some(anchor) = squeleton.anchor {
+            if let Some(tail) = squeleton.nodes.last_mut() {
+                tail.0 = anchor;
+            }
+
+            backward_kinematics(&mut squeleton);
+        }
+
         compute_skin(&mut squeleton, &mut gizmos);
     }
 }
@@ -90,6 +100,40 @@ fn forward_kinematics(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
                 // gizmos.circle_2d(front, 5.0, COLOR_WHITE);
                 // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
                 // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+}
+
+fn backward_kinematics(squeleton: &mut KinematicChain) {
+    let node_distance = squeleton.distance;
+    let mut iter = squeleton.nodes.iter_mut().rev().peekable();
+
+    loop {
+        if let Some(head) = iter.next() {
+            if let Some(mut tail) = iter.peek_mut() {
+                debug!("Looking at {:?} {:?}", head, tail);
+
+                let distance = head.0.distance(tail.0);
+                if let Ok(direction) = Dir2::new((tail.0 - head.0).truncate().normalize()) {
+                    let ray = Ray2d {
+                        origin: head.0.truncate(),
+                        direction,
+                    };
+
+                    if distance > node_distance {
+                        let new_position = ray.origin + *ray.direction * node_distance;
+                        tail.0.x = new_position.x;
+                        tail.0.y = new_position.y;
+                    }
+                } else {
+                    break;
+                }
+
             } else {
                 break;
             }

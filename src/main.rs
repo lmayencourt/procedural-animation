@@ -14,7 +14,7 @@ mod creatures;
 mod corbusier_colors;
 mod water_effect;
 
-use creatures::{CreaturesPlugin, Squeleton};
+use creatures::{CreaturesPlugin, kinematic_chain::KinematicChain};
 use water_effect::WaterEffectPlugin;
 
 /// We will store the world position of the mouse cursor here.
@@ -76,17 +76,19 @@ fn follow_mouse(
     buttons: Res<ButtonInput<MouseButton>>,
     touches: Res<Touches>,
     mut mycoords: ResMut<MyWorldCoords>,
-    mut squeleton: Query<&mut Squeleton>,
+    mut squeleton: Query<&mut KinematicChain>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     if buttons.pressed(MouseButton::Left) {
         let mut squeleton = squeleton.single_mut();
 
-        if let Some(head) = squeleton.nodes.first_mut() {
-            head.0.x = mycoords.0.x;
-            head.0.y = mycoords.0.y;
-        }
+        squeleton.target = mycoords.0.extend(0.0);
+
+        // if let Some(head) = squeleton.nodes.first_mut() {
+        //     head.0.x = mycoords.0.x;
+        //     head.0.y = mycoords.0.y;
+        // }
     }
 
     for finger in touches.iter() {

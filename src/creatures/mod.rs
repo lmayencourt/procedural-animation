@@ -79,7 +79,7 @@ fn setup(
 
     commands
     .spawn((
-        KinematicChain::new(20, 12.0),
+        KinematicChain::new(20, 12.0, None),
         ShapeBundle {
             path: GeometryBuilder::build_as(&shape),
             ..default()
