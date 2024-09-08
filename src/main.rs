@@ -74,8 +74,11 @@ fn my_cursor_system(
 
 fn follow_mouse(
     buttons: Res<ButtonInput<MouseButton>>,
+    touches: Res<Touches>,
     mut mycoords: ResMut<MyWorldCoords>,
     mut squeleton: Query<&mut Squeleton>,
+    q_window: Query<&Window, With<PrimaryWindow>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     if buttons.pressed(MouseButton::Left) {
         let mut squeleton = squeleton.single_mut();
@@ -84,6 +87,40 @@ fn follow_mouse(
             head.0.x = mycoords.0.x;
             head.0.y = mycoords.0.y;
         }
+    }
+
+    for finger in touches.iter() {
+        // if touches.just_pressed(finger.id()) {
+        //     println!("A new touch with ID {} just began.", finger.id());
+        // }
+
+        // get the camera info and transform
+        // assuming there is exactly one main camera entity, so Query::single() is OK
+        let (camera, camera_transform) = q_camera.single();
+
+        // There is only one primary window, so we can similarly get it from the query:
+        let window = q_window.single();
+        // check if the cursor is inside the window and get its position
+        // then, ask bevy to convert into world coordinates, and truncate to discard Z
+        if let Some(world_position) = window
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+        .map(|ray| ray.origin.truncate())
+            {
+                mycoords.0 = world_position;
+            }
+
+        if let Some(position) = camera.viewport_to_world(camera_transform, finger.position())
+            .map(|ray| ray.origin.truncate()) {
+                let mut squeleton = squeleton.single_mut();
+
+                if let Some(head) = squeleton.nodes.first_mut() {
+                    // head.0.x = finger.position().x;
+                    // head.0.y = finger.position().y;
+                    head.0.x = position.x;
+                    head.0.y = position.y;
+                }
+            }
     }
 }
 
