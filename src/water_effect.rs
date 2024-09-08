@@ -14,7 +14,7 @@ struct WaterMaterial {}
 
 impl Material2d for WaterMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/water_foam.wgsl".into()
+        "embedded://shaders/water_foam.wgsl".into()
     }
 }
 

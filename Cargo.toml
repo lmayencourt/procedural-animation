@@ -4,9 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# file_watcher features used to ease the shader development
+# bevy = {version = "0.14", features = ['file_watcher']}
 bevy = "0.14"
 bevy_prototype_lyon = "=0.12.0"
-
+bevy_embedded_assets = "0.11.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

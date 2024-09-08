@@ -8,6 +8,7 @@ use bevy::{
     window::PrimaryWindow,
 };
 use bevy_prototype_lyon::prelude::*;
+use bevy_embedded_assets::EmbeddedAssetPlugin;
 
 mod water_effect;
 
@@ -90,6 +91,7 @@ struct Eye {
 
 fn main() {
     App::new()
+        .add_plugins(EmbeddedAssetPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(WaterEffectPlugin)
         .add_plugins(ShapePlugin)
