@@ -2,13 +2,11 @@
 * Copyright (c) 2024 Louis Mayencourt
 */
 
-use bevy::{
-    prelude::*,
-};
+use bevy::prelude::*;
 
 use crate::corbusier_colors::*;
-use crate::creatures::Creature;
 use crate::creatures::body_parts::*;
+use crate::creatures::Creature;
 
 /// Fix point eye
 #[derive(Component)]
@@ -17,7 +15,7 @@ pub struct Eye {
     pub position: BodyPartPosition,
 }
 
-pub fn draw_eye (
+pub fn draw_eye(
     mut gizmos: Gizmos,
     mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
     mut q_eye: Query<(&Eye, &mut Transform)>,
@@ -27,7 +25,7 @@ pub fn draw_eye (
             if let Ok((eye, mut transform)) = q_eye.get_mut(child) {
                 let anchor_node = squeleton.nodes[eye.anchor];
                 let anchor_head = squeleton.nodes[eye.anchor - 1];
-    
+
                 let distance = anchor_head.0.distance(anchor_node.0);
                 let ray = Ray2d {
                     origin: anchor_head.0.truncate(),
@@ -35,10 +33,10 @@ pub fn draw_eye (
                         (anchor_node.0 - anchor_head.0).truncate().normalize(),
                     ),
                 };
-    
+
                 let left = ray.origin + ray.direction.perp() * anchor_node.1 * 0.75;
-                let right = ray.origin + -ray.direction.perp() * anchor_node.1 *0.75;
-    
+                let right = ray.origin + -ray.direction.perp() * anchor_node.1 * 0.75;
+
                 gizmos.line_2d(
                     ray.origin,
                     ray.origin + *ray.direction * distance,
@@ -50,21 +48,23 @@ pub fn draw_eye (
                         transform.translation = anchor_node.0;
                         transform.translation.z = 1.0;
                         let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2);
+                        transform.rotation =
+                            Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2);
                     }
                     BodyPartPosition::Left => {
                         transform.translation = left.extend(1.0);
                         let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 + 0.2);
+                        transform.rotation =
+                            Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 + 0.2);
                     }
                     BodyPartPosition::Right => {
                         transform.translation = right.extend(1.0);
                         let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 - 0.2);
+                        transform.rotation =
+                            Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 - 0.2);
                     }
                 }
             }
-
         }
     }
 }

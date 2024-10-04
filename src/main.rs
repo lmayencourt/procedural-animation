@@ -7,14 +7,14 @@ use bevy::{
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     window::{PrimaryWindow, WindowResized},
 };
-use bevy_prototype_lyon::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
+use bevy_prototype_lyon::prelude::*;
 
-mod creatures;
 mod corbusier_colors;
+mod creatures;
 mod water_effect;
 
-use creatures::{CreaturesPlugin, Creature, kinematic_chain::KinematicChain};
+use creatures::{kinematic_chain::KinematicChain, Creature, CreaturesPlugin};
 use water_effect::WaterEffectPlugin;
 
 /// We will store the world position of the mouse cursor here.
@@ -37,10 +37,7 @@ fn main() {
         .run();
 }
 
-fn setup(
-    mut commands: Commands,
-    mut config_store: ResMut<GizmoConfigStore>,
-) {
+fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>) {
     commands.spawn(Camera2dBundle::default());
 
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
@@ -105,24 +102,26 @@ fn follow_mouse(
         // check if the cursor is inside the window and get its position
         // then, ask bevy to convert into world coordinates, and truncate to discard Z
         if let Some(world_position) = window
-        .cursor_position()
-        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-        .map(|ray| ray.origin.truncate())
-            {
-                mycoords.0 = world_position;
-            }
+            .cursor_position()
+            .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
+            .map(|ray| ray.origin.truncate())
+        {
+            mycoords.0 = world_position;
+        }
 
-        if let Some(position) = camera.viewport_to_world(camera_transform, finger.position())
-            .map(|ray| ray.origin.truncate()) {
-                let mut squeleton = squeleton.single_mut();
+        if let Some(position) = camera
+            .viewport_to_world(camera_transform, finger.position())
+            .map(|ray| ray.origin.truncate())
+        {
+            let mut squeleton = squeleton.single_mut();
 
-                if let Some(head) = squeleton.nodes.first_mut() {
-                    // head.0.x = finger.position().x;
-                    // head.0.y = finger.position().y;
-                    head.0.x = position.x;
-                    head.0.y = position.y;
-                }
+            if let Some(head) = squeleton.nodes.first_mut() {
+                // head.0.x = finger.position().x;
+                // head.0.y = finger.position().y;
+                head.0.x = position.x;
+                head.0.y = position.y;
             }
+        }
     }
 }
 

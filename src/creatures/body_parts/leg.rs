@@ -2,13 +2,11 @@
 * Copyright (c) 2024 Louis Mayencourt
 */
 
-use bevy::{
-    prelude::*,
-};
+use bevy::prelude::*;
 
 use crate::corbusier_colors::*;
-use crate::creatures::Creature;
 use crate::creatures::body_parts::*;
+use crate::creatures::Creature;
 
 /// Moving leg following body position
 #[derive(Component)]
@@ -17,9 +15,7 @@ pub struct Leg {
     pub position: BodyPartPosition,
 }
 
-pub fn clear_leg_rotation(
-    mut q_legs: Query<&mut Transform, With<Leg>>,
-) {
+pub fn clear_leg_rotation(mut q_legs: Query<&mut Transform, With<Leg>>) {
     for mut leg in q_legs.iter_mut() {
         leg.rotation = Quat::from_rotation_x(0.);
     }
@@ -47,13 +43,21 @@ pub fn draw_leg(
                 let foot_direction = get_perpendicular_body_ray(anchor_node, anchor_head);
                 let middle_position;
                 match leg.position {
-                    BodyPartPosition::Left => middle_position = anchor_node.0.truncate() - foot_direction.direction * leg_length / std::f32::consts::SQRT_2,
-                    BodyPartPosition::Right => middle_position = anchor_node.0.truncate() + foot_direction.direction * leg_length / std::f32::consts::SQRT_2,
+                    BodyPartPosition::Left => {
+                        middle_position = anchor_node.0.truncate()
+                            - foot_direction.direction * leg_length / std::f32::consts::SQRT_2
+                    }
+                    BodyPartPosition::Right => {
+                        middle_position = anchor_node.0.truncate()
+                            + foot_direction.direction * leg_length / std::f32::consts::SQRT_2
+                    }
                     BodyPartPosition::Dorsal => middle_position = anchor_node.0.truncate(),
                 }
 
-                let top_position = middle_position - foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
-                let bottom_position = middle_position + foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
+                let top_position = middle_position
+                    - foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
+                let bottom_position = middle_position
+                    + foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
                 // gizmos.circle_2d(middle_position, 5.0 , COLOR_GREEN);
                 // gizmos.circle_2d(top_position, 5.0 , COLOR_RED);
                 // gizmos.circle_2d(bottom_position, 5.0 , COLOR_RED);
@@ -63,7 +67,6 @@ pub fn draw_leg(
                     chain.target = top_position.extend(0.0);
                 }
             }
-
         }
     }
 }

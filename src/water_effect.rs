@@ -4,8 +4,8 @@
 
 use bevy::{
     prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle, Material2d, Material2dPlugin},
     render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle, Mesh2dHandle},
 };
 
 /// Custom 2d material for water shader

@@ -19,7 +19,7 @@ impl KinematicChain {
     pub fn new(count: usize, distance: f32, anchor: Option<Vec3>) -> Self {
         let mut nodes = Vec::<(Vec3, f32)>::new();
         // first 1/6 nodes rises from size to create an head like shape
-        let nose = count/6;
+        let nose = count / 6;
         for n in 0..nose {
             nodes.push((
                 Vec3::new(0.0, distance * n as f32, 0.0),
@@ -133,7 +133,6 @@ fn backward_kinematics(squeleton: &mut KinematicChain) {
                 } else {
                     break;
                 }
-
             } else {
                 break;
             }
@@ -151,10 +150,10 @@ fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gi
     let mut skin_right = Vec::<Vec2>::new();
     let mut skin_head_tail = Vec::<Vec2>::new();
 
-    let offset:Vec3;
+    let offset: Vec3;
     if let Some(head) = iter.peek() {
         if head.0 != *t_global {
-                offset = *t_global;
+            offset = *t_global;
         } else {
             offset = Vec3::ZERO;
         }
@@ -187,7 +186,6 @@ fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gi
                 gizmos.circle_2d(right, 2.0, COLOR_RED);
                 gizmos.circle_2d(front, 2.0, COLOR_RED);
                 gizmos.circle_2d(back, 2.0, COLOR_RED);
-
             } else {
                 break;
             }
