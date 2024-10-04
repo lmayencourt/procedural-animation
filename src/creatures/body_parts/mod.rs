@@ -18,6 +18,12 @@ pub enum BodyPartPosition {
     Right,
 }
 
+#[derive(Component, Default)]
+pub struct BodyPartAnchor {
+    pub anchor: usize,
+    pub position: BodyPartPosition,
+}
+
 fn get_attachment_position(
     node: (Vec3, f32),
     head: (Vec3, f32),

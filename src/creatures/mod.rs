@@ -69,7 +69,8 @@ fn setup(
         ))
         .with_children(|parent| {
             parent.spawn((
-                Fin {
+                Fin,
+                BodyPartAnchor {
                     anchor: 5,
                     position: BodyPartPosition::Left,
                 },
@@ -80,7 +81,8 @@ fn setup(
                 },
             ));
             parent.spawn((
-                Fin {
+                Fin,
+                BodyPartAnchor {
                     anchor: 5,
                     position: BodyPartPosition::Right,
                 },
@@ -91,7 +93,8 @@ fn setup(
                 },
             ));
             parent.spawn((
-                Fin {
+                Fin,
+                BodyPartAnchor {
                     anchor: 7,
                     position: BodyPartPosition::Dorsal,
                 },
@@ -102,7 +105,8 @@ fn setup(
                 },
             ));
             parent.spawn((
-                Fin {
+                Fin,
+                BodyPartAnchor {
                     anchor: 18,
                     position: BodyPartPosition::Left,
                 },
@@ -113,7 +117,8 @@ fn setup(
                 },
             ));
             parent.spawn((
-                Fin {
+                Fin,
+                BodyPartAnchor {
                     anchor: 18,
                     position: BodyPartPosition::Right,
                 },
@@ -125,7 +130,8 @@ fn setup(
             ));
             // Draw Eye
             parent.spawn((
-                Eye {
+                Eye,
+                BodyPartAnchor {
                     anchor: 2,
                     position: BodyPartPosition::Left,
                 },
@@ -136,7 +142,8 @@ fn setup(
                 },
             ));
             parent.spawn((
-                Eye {
+                Eye,
+                BodyPartAnchor {
                     anchor: 2,
                     position: BodyPartPosition::Right,
                 },
@@ -148,7 +155,8 @@ fn setup(
             ));
             // Spawn 4 legs
             parent.spawn((
-                Leg {
+                Leg,
+                BodyPartAnchor {
                     anchor: 3,
                     position: BodyPartPosition::Right,
                 },
@@ -160,7 +168,8 @@ fn setup(
                 Fill::color(COLOR_GREEN),
             ));
             parent.spawn((
-                Leg {
+                Leg,
+                BodyPartAnchor {
                     anchor: 3,
                     position: BodyPartPosition::Left,
                 },
@@ -172,7 +181,8 @@ fn setup(
                 Fill::color(COLOR_GREEN),
             ));
             parent.spawn((
-                Leg {
+                Leg,
+                BodyPartAnchor {
                     anchor: 13,
                     position: BodyPartPosition::Right,
                 },
@@ -184,7 +194,8 @@ fn setup(
                 Fill::color(COLOR_GREEN),
             ));
             parent.spawn((
-                Leg {
+                Leg,
+                BodyPartAnchor {
                     anchor: 13,
                     position: BodyPartPosition::Left,
                 },

@@ -10,10 +10,7 @@ use crate::creatures::Creature;
 
 /// Moving leg following body position
 #[derive(Component)]
-pub struct Leg {
-    pub anchor: usize,
-    pub position: BodyPartPosition,
-}
+pub struct Leg;
 
 pub fn clear_leg_rotation(mut q_legs: Query<&mut Transform, With<Leg>>) {
     for mut leg in q_legs.iter_mut() {
@@ -24,7 +21,7 @@ pub fn clear_leg_rotation(mut q_legs: Query<&mut Transform, With<Leg>>) {
 pub fn draw_leg(
     mut gizmos: Gizmos,
     mut q_squeleton: Query<(&KinematicChain, &mut Children), With<Creature>>,
-    mut q_legs: Query<(&mut Leg, &mut KinematicChain, &mut Transform), Without<Creature>>,
+    mut q_legs: Query<(&mut BodyPartAnchor, &mut KinematicChain, &mut Transform), (Without<Creature>, With<Leg>)>,
 ) {
     for (squeleton, children) in q_squeleton.iter_mut() {
         for &child in children.iter() {

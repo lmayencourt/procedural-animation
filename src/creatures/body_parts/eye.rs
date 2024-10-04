@@ -9,15 +9,12 @@ use crate::creatures::body_parts::*;
 
 /// Fix point eye
 #[derive(Component)]
-pub struct Eye {
-    pub anchor: usize,
-    pub position: BodyPartPosition,
-}
+pub struct Eye;
 
 pub fn draw_eye(
     mut gizmos: Gizmos,
     mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
-    mut q_eye: Query<(&Eye, &mut Transform)>,
+    mut q_eye: Query<(&BodyPartAnchor, &mut Transform), With<Eye>>,
 ) {
     for (squeleton, children) in q_squeleton.iter_mut() {
         for &child in children.iter() {

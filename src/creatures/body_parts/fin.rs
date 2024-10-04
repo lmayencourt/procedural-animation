@@ -9,15 +9,12 @@ use crate::creatures::body_parts::*;
 
 /// Fix point Fin
 #[derive(Component, Default)]
-pub struct Fin {
-    pub anchor: usize,
-    pub position: BodyPartPosition,
-}
+pub struct Fin;
 
 pub fn draw_fin(
     mut gizmos: Gizmos,
     mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
-    mut q_fins: Query<(&Fin, &mut Transform)>,
+    mut q_fins: Query<(&BodyPartAnchor, &mut Transform), With<Fin>>,
 ) {
     for (squeleton, children) in q_squeleton.iter_mut() {
         for &child in children.iter() {
