@@ -6,7 +6,6 @@ use bevy::prelude::*;
 
 use crate::corbusier_colors::*;
 use crate::creatures::body_parts::*;
-use crate::creatures::Creature;
 
 /// Fix point eye
 #[derive(Component)]
@@ -20,7 +19,7 @@ pub fn draw_eye(
     mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
     mut q_eye: Query<(&Eye, &mut Transform)>,
 ) {
-    for (squeleton, mut children) in q_squeleton.iter_mut() {
+    for (squeleton, children) in q_squeleton.iter_mut() {
         for &child in children.iter() {
             if let Ok((eye, mut transform)) = q_eye.get_mut(child) {
                 let anchor_node = squeleton.nodes[eye.anchor];

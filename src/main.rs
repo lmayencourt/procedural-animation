@@ -4,7 +4,6 @@
 
 use bevy::{
     prelude::*,
-    sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     window::{PrimaryWindow, WindowResized},
 };
 use bevy_embedded_assets::EmbeddedAssetPlugin;

@@ -6,7 +6,6 @@ use bevy::prelude::*;
 
 use crate::corbusier_colors::*;
 use crate::creatures::body_parts::*;
-use crate::creatures::Creature;
 
 /// Fix point Fin
 #[derive(Component, Default)]
@@ -20,7 +19,7 @@ pub fn draw_fin(
     mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
     mut q_fins: Query<(&Fin, &mut Transform)>,
 ) {
-    for (squeleton, mut children) in q_squeleton.iter_mut() {
+    for (squeleton, children) in q_squeleton.iter_mut() {
         for &child in children.iter() {
             if let Ok((fin, mut transform)) = q_fins.get_mut(child) {
                 let anchor_node = squeleton.nodes[fin.anchor];

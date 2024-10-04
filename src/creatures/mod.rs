@@ -238,7 +238,7 @@ fn draw_body(
         //         head.0.y = bezier.position(t).y;
         //     }
 
-        let mut points = Vec::<Vec2>::new();
+        let points = Vec::<Vec2>::new();
 
         let points = squeleton.skin.clone();
 

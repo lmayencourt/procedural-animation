@@ -74,7 +74,7 @@ fn forward_kinematics(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
 
     loop {
         if let Some(head) = iter.next() {
-            if let Some(mut tail) = iter.peek_mut() {
+            if let Some(tail) = iter.peek_mut() {
                 debug!("Looking at {:?} {:?}", head, tail);
 
                 let distance = head.0.distance(tail.0);
@@ -115,7 +115,7 @@ fn backward_kinematics(squeleton: &mut KinematicChain) {
 
     loop {
         if let Some(head) = iter.next() {
-            if let Some(mut tail) = iter.peek_mut() {
+            if let Some(tail) = iter.peek_mut() {
                 debug!("Looking at {:?} {:?}", head, tail);
 
                 let distance = head.0.distance(tail.0);
@@ -163,7 +163,7 @@ fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gi
 
     loop {
         if let Some(head) = iter.next() {
-            if let Some(mut tail) = iter.peek_mut() {
+            if let Some(tail) = iter.peek_mut() {
                 debug!("Looking at {:?} {:?}", head, tail);
 
                 let ray = Ray2d {

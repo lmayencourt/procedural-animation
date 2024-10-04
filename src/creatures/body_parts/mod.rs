@@ -4,17 +4,11 @@
 
 use bevy::prelude::*;
 
-use crate::corbusier_colors::*;
 use crate::creatures::kinematic_chain::KinematicChain;
-use crate::creatures::Creature;
 
 pub mod eye;
 pub mod fin;
 pub mod leg;
-
-use eye::*;
-use fin::*;
-use leg::*;
 
 #[derive(Default)]
 pub enum BodyPartPosition {

@@ -26,9 +26,9 @@ pub fn draw_leg(
     mut q_squeleton: Query<(&KinematicChain, &mut Children), With<Creature>>,
     mut q_legs: Query<(&mut Leg, &mut KinematicChain, &mut Transform), Without<Creature>>,
 ) {
-    for (squeleton, mut children) in q_squeleton.iter_mut() {
+    for (squeleton, children) in q_squeleton.iter_mut() {
         for &child in children.iter() {
-            if let Ok((mut leg, mut chain, mut transform)) = q_legs.get_mut(child) {
+            if let Ok((leg, mut chain, mut transform)) = q_legs.get_mut(child) {
                 let anchor_node = squeleton.nodes[leg.anchor];
                 let anchor_head = squeleton.nodes[leg.anchor - 1];
 
