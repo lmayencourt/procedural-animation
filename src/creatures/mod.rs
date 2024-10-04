@@ -10,9 +10,14 @@ use bevy_prototype_lyon::prelude::*;
 
 use crate::corbusier_colors::*;
 
+mod body_parts;
 pub mod kinematic_chain;
 
 use crate::creatures::kinematic_chain::{KinematicChain, reach_target};
+use body_parts::*;
+use body_parts::leg::Leg;
+use body_parts::eye::Eye;
+use body_parts::fin::Fin;
 
 pub struct CreaturesPlugin;
 
@@ -21,10 +26,10 @@ impl Plugin for CreaturesPlugin {
         app.add_systems(Startup, setup);
         app.add_systems(Update, reach_target);
         app.add_systems(Update, draw_body);
-        app.add_systems(Update, draw_fin);
-        app.add_systems(Update, draw_eye);
-        app.add_systems(Update, draw_leg);
-        app.add_systems(Update, clear_leg_rotation);
+        app.add_systems(Update, body_parts::fin::draw_fin);
+        app.add_systems(Update, body_parts::eye::draw_eye);
+        app.add_systems(Update, body_parts::leg::draw_leg);
+        app.add_systems(Update, body_parts::leg::clear_leg_rotation);
     }
 }
 
@@ -33,32 +38,6 @@ pub struct Creature;
 
 #[derive(Component)]
 struct Skin;
-
-#[derive(Default)]
-enum BodyPartPosition {
-    #[default]
-    Dorsal,
-    Left,
-    Right,
-}
-
-#[derive(Component, Default)]
-struct Fin {
-    anchor: usize,
-    position: BodyPartPosition,
-}
-
-#[derive(Component)]
-struct Eye {
-    anchor: usize,
-    position: BodyPartPosition,
-}
-
-#[derive(Component)]
-struct Leg {
-    anchor: usize,
-    position: BodyPartPosition,
-}
 
 fn setup(
     mut commands: Commands,
@@ -288,227 +267,4 @@ fn draw_body(
         }
     }
 
-}
-
-fn draw_fin(
-    mut gizmos: Gizmos,
-    mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
-    mut q_fins: Query<(&Fin, &mut Transform)>,
-) {
-    for (squeleton, mut children) in q_squeleton.iter_mut() {
-        for &child in children.iter() {
-            if let Ok((fin, mut transform)) = q_fins.get_mut(child) {
-                let anchor_node = squeleton.nodes[fin.anchor];
-                let anchor_head = squeleton.nodes[fin.anchor - 1];
-    
-                let distance = anchor_head.0.distance(anchor_node.0);
-                let ray = Ray2d {
-                    origin: anchor_head.0.truncate(),
-                    direction: Dir2::new_unchecked(
-                        (anchor_node.0 - anchor_head.0).truncate().normalize(),
-                    ),
-                };
-    
-                let left = ray.origin + ray.direction.perp() * anchor_node.1;
-                let right = ray.origin + -ray.direction.perp() * anchor_node.1;
-    
-                gizmos.line_2d(
-                    ray.origin,
-                    ray.origin + *ray.direction * distance,
-                    COLOR_GREEN,
-                );
-    
-                match fin.position {
-                    BodyPartPosition::Dorsal => {
-                        transform.translation = anchor_node.0;
-                        transform.translation.z = 1.0;
-                        let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
-                    }
-                    BodyPartPosition::Left => {
-                        transform.translation = left.extend(-1.0);
-                        let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI / 5.0);
-                    }
-                    BodyPartPosition::Right => {
-                        transform.translation = right.extend(-1.0);
-                        let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI / 5.0);
-                    }
-                }
-            }
-
-        }
-    }
-}
-
-fn draw_eye (
-    mut gizmos: Gizmos,
-    mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
-    mut q_eye: Query<(&Eye, &mut Transform)>,
-) {
-    for (squeleton, mut children) in q_squeleton.iter_mut() {
-        for &child in children.iter() {
-            if let Ok((eye, mut transform)) = q_eye.get_mut(child) {
-                let anchor_node = squeleton.nodes[eye.anchor];
-                let anchor_head = squeleton.nodes[eye.anchor - 1];
-    
-                let distance = anchor_head.0.distance(anchor_node.0);
-                let ray = Ray2d {
-                    origin: anchor_head.0.truncate(),
-                    direction: Dir2::new_unchecked(
-                        (anchor_node.0 - anchor_head.0).truncate().normalize(),
-                    ),
-                };
-    
-                let left = ray.origin + ray.direction.perp() * anchor_node.1 * 0.75;
-                let right = ray.origin + -ray.direction.perp() * anchor_node.1 *0.75;
-    
-                gizmos.line_2d(
-                    ray.origin,
-                    ray.origin + *ray.direction * distance,
-                    COLOR_GREEN,
-                );
-
-                match eye.position {
-                    BodyPartPosition::Dorsal => {
-                        transform.translation = anchor_node.0;
-                        transform.translation.z = 1.0;
-                        let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2);
-                    }
-                    BodyPartPosition::Left => {
-                        transform.translation = left.extend(1.0);
-                        let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 + 0.2);
-                    }
-                    BodyPartPosition::Right => {
-                        transform.translation = right.extend(1.0);
-                        let angle = ray.direction.to_angle();
-                        transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::FRAC_PI_2 - 0.2);
-                    }
-                }
-            }
-
-        }
-    }
-}
-
-fn clear_leg_rotation(
-    mut q_legs: Query<&mut Transform, With<Leg>>,
-) {
-    for mut leg in q_legs.iter_mut() {
-        leg.rotation = Quat::from_rotation_x(0.);
-    }
-}
-
-fn draw_leg(
-    mut gizmos: Gizmos,
-    mut q_squeleton: Query<(&KinematicChain, &mut Children), With<Creature>>,
-    mut q_legs: Query<(&mut Leg, &mut KinematicChain, &mut Transform), Without<Creature>>,
-) {
-    for (squeleton, mut children) in q_squeleton.iter_mut() {
-        for &child in children.iter() {
-            if let Ok((mut leg, mut chain, mut transform)) = q_legs.get_mut(child) {
-                let anchor_node = squeleton.nodes[leg.anchor];
-                let anchor_head = squeleton.nodes[leg.anchor - 1];
-
-                *transform = get_attachment_position(anchor_node, anchor_head, &leg.position);
-
-                gizmos.circle_2d(transform.translation.truncate(), 5.0, COLOR_GREEN);
-
-                // calculate the position of the foot
-                chain.anchor = Some(transform.translation);
-
-                let leg_length = chain.distance * chain.nodes.len() as f32;
-                let foot_direction = get_perpendicular_body_ray(anchor_node, anchor_head);
-                let middle_position;
-                match leg.position {
-                    BodyPartPosition::Left => middle_position = anchor_node.0.truncate() - foot_direction.direction * leg_length / std::f32::consts::SQRT_2,
-                    BodyPartPosition::Right => middle_position = anchor_node.0.truncate() + foot_direction.direction * leg_length / std::f32::consts::SQRT_2,
-                    BodyPartPosition::Dorsal => middle_position = anchor_node.0.truncate(),
-                }
-
-                let top_position = middle_position - foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
-                let bottom_position = middle_position + foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
-                // gizmos.circle_2d(middle_position, 5.0 , COLOR_GREEN);
-                // gizmos.circle_2d(top_position, 5.0 , COLOR_RED);
-                // gizmos.circle_2d(bottom_position, 5.0 , COLOR_RED);
-
-                let distance = chain.target.distance(anchor_head.0);
-                if distance > leg_length {
-                    chain.target = top_position.extend(0.0);
-                }
-            }
-
-        }
-    }
-}
-
-fn get_attachment_position(node: (Vec3, f32), head: (Vec3, f32), part_type: &BodyPartPosition) -> Transform
-{
-    // let distance = head.0.distance(node.0);
-    let ray = Ray2d {
-        origin: head.0.truncate(),
-        direction: Dir2::new_unchecked(
-            (node.0 - head.0).truncate().normalize(),
-        ),
-    };
-
-    // let ray = get_body_direction(node, head);
-
-    let left = ray.origin + ray.direction.perp() * node.1;
-    let right = ray.origin + -ray.direction.perp() * node.1;
-
-    let mut transform = Transform::default();
-    match part_type {
-        BodyPartPosition::Dorsal => {
-            transform.translation = node.0;
-            transform.translation.z = 1.0;
-            let angle = ray.direction.to_angle();
-            transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
-        }
-        BodyPartPosition::Left => {
-            transform.translation = left.extend(-1.0);
-            let angle = ray.direction.to_angle();
-            transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::PI/2.0);
-        }
-        BodyPartPosition::Right => {
-            transform.translation = right.extend(-1.0);
-            let angle = ray.direction.to_angle();
-            transform.rotation = Quat::from_rotation_z(angle + std::f32::consts::PI/2.0);
-        }
-    }
-
-    return transform;
-}
-
-fn get_body_direction(node: (Vec3, f32), head: (Vec3, f32)) -> Ray2d {
-    let ray = Ray2d {
-        origin: head.0.truncate(),
-        direction: Dir2::new_unchecked(
-            (node.0 - head.0).truncate().normalize(),
-        ),
-    };
-
-    // Left side
-    return Ray2d {
-        origin: ray.origin + ray.direction.perp() * node.1,
-        direction: Dir2::new_unchecked(ray.direction.perp())
-    }
-}
-
-fn get_perpendicular_body_ray(node: (Vec3, f32), head: (Vec3, f32)) -> Ray2d {
-    let ray = Ray2d {
-        origin: head.0.truncate(),
-        direction: Dir2::new_unchecked(
-            (node.0 - head.0).truncate().normalize(),
-        ),
-    };
-
-    // Left side
-    return Ray2d {
-        origin: ray.origin + ray.direction.perp() * node.1,
-        direction: Dir2::new_unchecked(-ray.direction.perp())
-    }
 }
