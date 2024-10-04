@@ -6,7 +6,7 @@ use bevy::prelude::*;
 
 use crate::corbusier_colors::*;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct KinematicChain {
     pub anchor: Option<Vec3>,
     pub target: Vec3,
@@ -45,10 +45,10 @@ impl KinematicChain {
 }
 
 pub fn reach_target(
-    mut squeletons: Query<&mut KinematicChain>,
+    mut squeletons: Query<(&mut KinematicChain, &GlobalTransform)>,
     mut gizmos: Gizmos,
 ) {
-    for mut squeleton in squeletons.iter_mut() {
+    for (mut squeleton, t_global) in squeletons.iter_mut() {
         let target = squeleton.target;
         if let Some(head) = squeleton.nodes.first_mut() {
             head.0 = target;
@@ -64,7 +64,7 @@ pub fn reach_target(
             backward_kinematics(&mut squeleton);
         }
 
-        compute_skin(&mut squeleton, &mut gizmos);
+        compute_skin(&mut squeleton, &t_global.translation(), &mut gizmos);
     }
 }
 
@@ -143,7 +143,7 @@ fn backward_kinematics(squeleton: &mut KinematicChain) {
     }
 }
 
-fn compute_skin(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
+fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gizmos) {
     let node_distance = squeleton.distance;
     let mut iter = squeleton.nodes.iter_mut().peekable();
 
@@ -151,13 +151,24 @@ fn compute_skin(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
     let mut skin_right = Vec::<Vec2>::new();
     let mut skin_head_tail = Vec::<Vec2>::new();
 
+    let offset:Vec3;
+    if let Some(head) = iter.peek() {
+        if head.0 != *t_global {
+                offset = *t_global;
+        } else {
+            offset = Vec3::ZERO;
+        }
+    } else {
+        offset = Vec3::ZERO;
+    }
+
     loop {
         if let Some(head) = iter.next() {
             if let Some(mut tail) = iter.peek_mut() {
                 debug!("Looking at {:?} {:?}", head, tail);
 
                 let ray = Ray2d {
-                    origin: head.0.truncate(),
+                    origin: head.0.truncate() - offset.truncate(),
                     direction: Dir2::new_unchecked((tail.0 - head.0).truncate().normalize()),
                 };
 
@@ -165,12 +176,17 @@ fn compute_skin(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
                 let front = ray.origin + -*ray.direction * head.1;
                 let left = ray.origin + ray.direction.perp() * head.1;
                 let right = ray.origin + -ray.direction.perp() * head.1;
-                let back = ray.origin + ray.direction.perp() * head.1;
+                let back = ray.origin + ray.direction * head.1;
 
                 skin_left.push(left);
                 skin_right.push(right);
                 skin_head_tail.push(front);
                 skin_head_tail.push(back);
+
+                gizmos.circle_2d(left, 2.0, COLOR_RED);
+                gizmos.circle_2d(right, 2.0, COLOR_RED);
+                gizmos.circle_2d(front, 2.0, COLOR_RED);
+                gizmos.circle_2d(back, 2.0, COLOR_RED);
 
             } else {
                 break;
@@ -185,7 +201,7 @@ fn compute_skin(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
     if let Some(tail) = back_iter.next() {
         if let Some(head) = back_iter.peek() {
             let ray = Ray2d {
-                origin: tail.0.truncate(),
+                origin: tail.0.truncate() - offset.truncate(),
                 direction: Dir2::new_unchecked((tail.0 - head.0).truncate().normalize()),
             };
 
@@ -198,9 +214,9 @@ fn compute_skin(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
             skin_right.push(right);
             skin_head_tail.push(back);
 
-            gizmos.circle_2d(back, 5.0, COLOR_WHITE);
-            gizmos.circle_2d(left, 5.0, COLOR_WHITE);
-            gizmos.circle_2d(right, 5.0, COLOR_BLUE);
+            gizmos.circle_2d(back + offset.truncate(), 5.0, COLOR_RED);
+            // gizmos.circle_2d(left, 5.0, COLOR_RED);
+            // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
         }
     }
 

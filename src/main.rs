@@ -14,7 +14,7 @@ mod creatures;
 mod corbusier_colors;
 mod water_effect;
 
-use creatures::{CreaturesPlugin, kinematic_chain::KinematicChain};
+use creatures::{CreaturesPlugin, Creature, kinematic_chain::KinematicChain};
 use water_effect::WaterEffectPlugin;
 
 /// We will store the world position of the mouse cursor here.
@@ -76,7 +76,7 @@ fn follow_mouse(
     buttons: Res<ButtonInput<MouseButton>>,
     touches: Res<Touches>,
     mut mycoords: ResMut<MyWorldCoords>,
-    mut squeleton: Query<&mut KinematicChain>,
+    mut squeleton: Query<&mut KinematicChain, With<Creature>>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {

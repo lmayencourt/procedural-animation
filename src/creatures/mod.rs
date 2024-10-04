@@ -24,12 +24,15 @@ impl Plugin for CreaturesPlugin {
         app.add_systems(Update, draw_fin);
         app.add_systems(Update, draw_eye);
         app.add_systems(Update, draw_leg);
+        app.add_systems(Update, clear_leg_rotation);
     }
 }
 
 #[derive(Component)]
-struct Skin;
+pub struct Creature;
 
+#[derive(Component)]
+struct Skin;
 
 #[derive(Default)]
 enum BodyPartPosition {
@@ -55,7 +58,6 @@ struct Eye {
 struct Leg {
     anchor: usize,
     position: BodyPartPosition,
-    nodes: Vec<(Vec3, f32)>,
 }
 
 fn setup(
@@ -79,6 +81,7 @@ fn setup(
 
     commands
     .spawn((
+        Creature,
         KinematicChain::new(20, 12.0, None),
         ShapeBundle {
             path: GeometryBuilder::build_as(&shape),
@@ -165,18 +168,54 @@ fn setup(
                 ..default()
             },
         ));
+        // Spawn 4 legs
         parent.spawn((
             Leg {
-                anchor: 10,
+                anchor: 3,
                 position: BodyPartPosition::Right,
-                nodes: vec![(Vec3::new(0.0, 0.0, 0.0), 2.0),
-                        (Vec3::new(4.0, 4.0, 0.0), 2.0),]
             },
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Ellipse::new(30.0, 10.0))),
-                material: materials.add(COLOR_GREEN),
+            KinematicChain::new(3, 20.0, None),
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shape),
                 ..default()
             },
+            Fill::color(COLOR_GREEN),
+        ));
+        parent.spawn((
+            Leg {
+                anchor: 3,
+                position: BodyPartPosition::Left,
+            },
+            KinematicChain::new(3, 20.0, None),
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shape),
+                ..default()
+            },
+            Fill::color(COLOR_GREEN),
+        ));
+        parent.spawn((
+            Leg {
+                anchor: 13,
+                position: BodyPartPosition::Right,
+            },
+            KinematicChain::new(3, 20.0, None),
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shape),
+                ..default()
+            },
+            Fill::color(COLOR_GREEN),
+        ));
+        parent.spawn((
+            Leg {
+                anchor: 13,
+                position: BodyPartPosition::Left,
+            },
+            KinematicChain::new(3, 20.0, None),
+            ShapeBundle {
+                path: GeometryBuilder::build_as(&shape),
+                ..default()
+            },
+            Fill::color(COLOR_GREEN),
         ));
     });
 }
@@ -206,25 +245,6 @@ fn draw_body(
     //     gizmos.circle_2d(p.truncate(), 5.0, COLOR_BLUE);
     // }
 
-    let (squeleton, mut path) = squeleton.single_mut();
-
-    // let t = (time.elapsed_seconds().sin() + 1.) / 2.;
-    //     if let Some(head) = squeleton.nodes.first_mut() {
-    //         head.0.x = bezier.position(t).x;
-    //         head.0.y = bezier.position(t).y;
-    //     }
-
-    let mut points = Vec::<Vec2>::new();
-
-    let points = squeleton.skin.clone();
-
-    let shape = shapes::Polygon {
-        points: points.into_iter().collect(),
-        closed: false,
-    };
-
-    *path = GeometryBuilder::build_as(&shape);
-
     // Clear all the preview skin shapes
     // This is really not efficient as we re-create every circle at every frame....
     let skins = skins.into_iter();
@@ -233,17 +253,41 @@ fn draw_body(
         commands.entity(skin).despawn();
     }
 
-    for node in &squeleton.nodes {
-        commands.spawn((
-            MaterialMesh2dBundle {
-                mesh: Mesh2dHandle(meshes.add(Circle { radius: node.1 })),
-                material: materials.add(COLOR_BLUE),
-                transform: Transform::from_translation(node.0),
-                ..default()
-            },
-            Skin,
-        ));
+    for (squeleton, mut path) in squeleton.iter_mut() {
+        // let t = (time.elapsed_seconds().sin() + 1.) / 2.;
+        //     if let Some(head) = squeleton.nodes.first_mut() {
+        //         head.0.x = bezier.position(t).x;
+        //         head.0.y = bezier.position(t).y;
+        //     }
+
+        let mut points = Vec::<Vec2>::new();
+
+        let points = squeleton.skin.clone();
+
+        for point in &points {
+            gizmos.circle_2d(*point, 5.0, COLOR_GREEN);
+        }
+
+        let shape = shapes::Polygon {
+            points: points.into_iter().collect(),
+            closed: false,
+        };
+
+        *path = GeometryBuilder::build_as(&shape);
+
+        for node in &squeleton.nodes {
+            commands.spawn((
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Circle { radius: node.1 })),
+                    material: materials.add(COLOR_BLUE),
+                    transform: Transform::from_translation(node.0),
+                    ..default()
+                },
+                Skin,
+            ));
+        }
     }
+
 }
 
 fn draw_fin(
@@ -350,14 +394,22 @@ fn draw_eye (
     }
 }
 
+fn clear_leg_rotation(
+    mut q_legs: Query<&mut Transform, With<Leg>>,
+) {
+    for mut leg in q_legs.iter_mut() {
+        leg.rotation = Quat::from_rotation_x(0.);
+    }
+}
+
 fn draw_leg(
     mut gizmos: Gizmos,
-    mut q_squeleton: Query<(&KinematicChain, &mut Children)>,
-    mut q_legs: Query<(&mut Leg, &mut Transform)>,
+    mut q_squeleton: Query<(&KinematicChain, &mut Children), With<Creature>>,
+    mut q_legs: Query<(&mut Leg, &mut KinematicChain, &mut Transform), Without<Creature>>,
 ) {
     for (squeleton, mut children) in q_squeleton.iter_mut() {
         for &child in children.iter() {
-            if let Ok((mut leg, mut transform)) = q_legs.get_mut(child) {
+            if let Ok((mut leg, mut chain, mut transform)) = q_legs.get_mut(child) {
                 let anchor_node = squeleton.nodes[leg.anchor];
                 let anchor_head = squeleton.nodes[leg.anchor - 1];
 
@@ -365,22 +417,28 @@ fn draw_leg(
 
                 gizmos.circle_2d(transform.translation.truncate(), 5.0, COLOR_GREEN);
 
-                let foot_direction = get_perpendicular_body_ray(anchor_node, anchor_head);
-
                 // calculate the position of the foot
-                for node in leg.nodes.iter_mut() {
-                    node.0.x = transform.translation.x;
-                    node.0.y = transform.translation.y;
+                chain.anchor = Some(transform.translation);
 
-                    let middle_position = node.0.truncate() + foot_direction.direction * 30.0;
-                    let top_position = middle_position + foot_direction.direction.perp() * 20.0;
-                    let bottom_position = middle_position - foot_direction.direction.perp() * 20.0;
-                    gizmos.circle_2d(middle_position, 5.0 , COLOR_GREEN);
-                    gizmos.circle_2d(top_position, 5.0 , COLOR_RED);
-                    gizmos.circle_2d(bottom_position, 5.0 , COLOR_RED);
-
+                let leg_length = chain.distance * chain.nodes.len() as f32;
+                let foot_direction = get_perpendicular_body_ray(anchor_node, anchor_head);
+                let middle_position;
+                match leg.position {
+                    BodyPartPosition::Left => middle_position = anchor_node.0.truncate() - foot_direction.direction * leg_length / std::f32::consts::SQRT_2,
+                    BodyPartPosition::Right => middle_position = anchor_node.0.truncate() + foot_direction.direction * leg_length / std::f32::consts::SQRT_2,
+                    BodyPartPosition::Dorsal => middle_position = anchor_node.0.truncate(),
                 }
 
+                let top_position = middle_position - foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
+                let bottom_position = middle_position + foot_direction.direction.perp() * leg_length / std::f32::consts::SQRT_2;
+                // gizmos.circle_2d(middle_position, 5.0 , COLOR_GREEN);
+                // gizmos.circle_2d(top_position, 5.0 , COLOR_RED);
+                // gizmos.circle_2d(bottom_position, 5.0 , COLOR_RED);
+
+                let distance = chain.target.distance(anchor_head.0);
+                if distance > leg_length {
+                    chain.target = top_position.extend(0.0);
+                }
             }
 
         }
