@@ -15,6 +15,7 @@ mod water_effect;
 
 use creatures::{kinematic_chain::KinematicChain, Creature, CreaturesPlugin};
 use water_effect::WaterEffectPlugin;
+use corbusier_colors::*;
 
 /// We will store the world position of the mouse cursor here.
 #[derive(Resource, Default)]
@@ -33,6 +34,7 @@ fn main() {
         .add_systems(Update, follow_mouse)
         .add_systems(Update, enable_gizmos)
         .add_systems(Update, adapt_windows_size)
+        .add_systems(Update, follow_circle)
         .run();
 }
 
@@ -66,6 +68,23 @@ fn my_cursor_system(
     {
         mycoords.0 = world_position;
     }
+}
+
+fn follow_circle(
+    time: Res<Time>,
+    mut q_squeleton: Query<&mut KinematicChain, With<Creature>>,
+    mut gizmos: Gizmos,
+) {
+    let circle_radius = 150.0;
+    gizmos.circle_2d(Vec2::ZERO, circle_radius, COLOR_WHITE);
+
+    let mut squeleton = q_squeleton.single_mut();
+
+    let t = time.elapsed_seconds();
+    squeleton.target = Vec3::new(f32::cos(t), f32::sin(t), 0.0);
+    squeleton.target *= circle_radius;
+    squeleton.target.x += f32::cos(t*5.0) * 10.0;
+    squeleton.target.y += f32::sin(t*5.0) * 10.0;
 }
 
 fn follow_mouse(

@@ -212,7 +212,6 @@ fn setup(
 fn draw_body(
     mut gizmos: Gizmos,
     mut squeleton: Query<(&mut KinematicChain, &mut Path)>,
-    time: Res<Time>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
