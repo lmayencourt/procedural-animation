@@ -133,12 +133,7 @@ fn follow_mouse(
         {
             let mut squeleton = squeleton.single_mut();
 
-            if let Some(head) = squeleton.nodes.first_mut() {
-                // head.0.x = finger.position().x;
-                // head.0.y = finger.position().y;
-                head.0.x = position.x;
-                head.0.y = position.y;
-            }
+            squeleton.target = position.extend(0.0);
         }
     }
 }
