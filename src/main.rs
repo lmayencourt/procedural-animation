@@ -73,18 +73,22 @@ fn my_cursor_system(
 fn follow_circle(
     time: Res<Time>,
     mut q_squeleton: Query<&mut KinematicChain, With<Creature>>,
+    buttons: Res<ButtonInput<MouseButton>>,
+    touches: Res<Touches>,
     mut gizmos: Gizmos,
 ) {
-    let circle_radius = 150.0;
-    gizmos.circle_2d(Vec2::ZERO, circle_radius, COLOR_WHITE);
+    if !buttons.pressed(MouseButton::Left) {
+        let circle_radius = 150.0;
+        gizmos.circle_2d(Vec2::ZERO, circle_radius, COLOR_WHITE);
 
-    let mut squeleton = q_squeleton.single_mut();
+        let mut squeleton = q_squeleton.single_mut();
 
-    let t = time.elapsed_seconds();
-    squeleton.target = Vec3::new(f32::cos(t), f32::sin(t), 0.0);
-    squeleton.target *= circle_radius;
-    squeleton.target.x += f32::cos(t*5.0) * 10.0;
-    squeleton.target.y += f32::sin(t*5.0) * 10.0;
+        let t = time.elapsed_seconds();
+        squeleton.target = Vec3::new(f32::cos(t), f32::sin(t), 0.0);
+        squeleton.target *= circle_radius;
+        squeleton.target.x += f32::cos(t*5.0) * 10.0;
+        squeleton.target.y += f32::sin(t*5.0) * 10.0;
+    }
 }
 
 fn follow_mouse(
