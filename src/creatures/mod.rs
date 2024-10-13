@@ -15,8 +15,6 @@ pub mod kinematic_chain;
 mod species;
 
 use crate::creatures::kinematic_chain::{reach_target, KinematicChain};
-use body_parts::eye::Eye;
-use body_parts::fin::Fin;
 use body_parts::leg::Leg;
 use body_parts::*;
 

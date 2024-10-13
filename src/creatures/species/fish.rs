@@ -60,9 +60,9 @@ impl Fish {
 
     pub fn spawn (
         self,
-        mut commands: &mut Commands,
-        mut meshes: &mut ResMut<Assets<Mesh>>,
-        mut materials: &mut ResMut<Assets<ColorMaterial>>
+        commands: &mut Commands,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<ColorMaterial>>
     ) -> Entity {
         commands.spawn(self)
         .with_children(|parent| {
