@@ -12,6 +12,7 @@ use crate::corbusier_colors::*;
 
 mod body_parts;
 pub mod kinematic_chain;
+mod species;
 
 use crate::creatures::kinematic_chain::{reach_target, KinematicChain};
 use body_parts::eye::Eye;
@@ -57,102 +58,15 @@ fn setup(
         closed: false,
     };
 
-    commands
-        .spawn((
-            Creature,
-            KinematicChain::new(20, 12.0, None),
-            ShapeBundle {
-                path: GeometryBuilder::build_as(&shape),
-                ..default()
-            },
-            Fill::color(COLOR_BLUE),
-        ))
-        .with_children(|parent| {
-            parent.spawn((
-                Fin,
-                BodyPartAnchor {
-                    anchor: 5,
-                    position: BodyPartPosition::Left,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
-                    material: materials.add(COLOR_LIGHT_BLUE),
-                    ..default()
-                },
-            ));
-            parent.spawn((
-                Fin,
-                BodyPartAnchor {
-                    anchor: 5,
-                    position: BodyPartPosition::Right,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(15.0, 30.0))),
-                    material: materials.add(COLOR_LIGHT_BLUE),
-                    ..default()
-                },
-            ));
-            parent.spawn((
-                Fin,
-                BodyPartAnchor {
-                    anchor: 7,
-                    position: BodyPartPosition::Dorsal,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 25.0))),
-                    material: materials.add(COLOR_LIGHT_BLUE),
-                    ..default()
-                },
-            ));
-            parent.spawn((
-                Fin,
-                BodyPartAnchor {
-                    anchor: 18,
-                    position: BodyPartPosition::Left,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
-                    material: materials.add(COLOR_LIGHT_BLUE),
-                    ..default()
-                },
-            ));
-            parent.spawn((
-                Fin,
-                BodyPartAnchor {
-                    anchor: 18,
-                    position: BodyPartPosition::Right,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(6.0, 12.0))),
-                    material: materials.add(COLOR_LIGHT_BLUE),
-                    ..default()
-                },
-            ));
-            // Draw Eye
-            parent.spawn((
-                Eye,
-                BodyPartAnchor {
-                    anchor: 2,
-                    position: BodyPartPosition::Left,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(3.0, 6.0))),
-                    material: materials.add(COLOR_BLACK),
-                    ..default()
-                },
-            ));
-            parent.spawn((
-                Eye,
-                BodyPartAnchor {
-                    anchor: 2,
-                    position: BodyPartPosition::Right,
-                },
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Ellipse::new(3.0, 6.0))),
-                    material: materials.add(COLOR_BLACK),
-                    ..default()
-                },
-            ));
+    let fish = species::fish::Fish::new(10, COLOR_WHITE);
+    fish.spawn(&mut commands, &mut meshes, &mut materials);
+
+    let fish = species::fish::Fish::new(10, COLOR_BLUE);
+    let playable = fish.spawn(&mut commands, &mut meshes, &mut materials);
+
+    commands.entity(playable).insert(Creature);
+
+    commands.entity(playable).with_children(|parent| {
             // Spawn 4 legs
             parent.spawn((
                 Leg,
@@ -206,7 +120,7 @@ fn setup(
                 },
                 Fill::color(COLOR_GREEN),
             ));
-        });
+    });
 }
 
 fn draw_body(
