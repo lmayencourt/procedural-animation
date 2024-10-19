@@ -76,6 +76,7 @@ fn follow_path (
             // We reached the last point. Clear the path
             points.0.clear();
             points.0.push(transform.translation);
+            progress.0 = 0.0;
         }
 
         if points.0.len() > 1 {
@@ -105,11 +106,17 @@ fn add_points (
 ) {
     if buttons.just_pressed(MouseButton::Left) {
         let (pos, mut points, mut progress) = query.single_mut();
+        // Add the new final destination
         points.0.push(mycoords.0.extend(0.0));
+
+        // Remove the already reached points and
         // change the first point to be the current position
-        let first = points.0.first_mut().unwrap();
-        *first = pos.translation;
-        progress.0 = 0.0;
+        if progress.0 != 0.0 {
+            points.0.drain(0..progress.0 as usize);
+            let first = points.0.first_mut().unwrap();
+            *first = pos.translation;
+            progress.0 = 0.0;
+        }
     }
 
     if buttons.just_pressed(MouseButton::Right) {
