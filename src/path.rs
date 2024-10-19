@@ -40,9 +40,6 @@ fn setup(
         Vec3::new(60., -120., 0.),
     ]];
 
-    // Make a CubicCurve
-    let bezier = CubicBezier::new(points).to_curve();
-
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: Mesh2dHandle(meshes.add(Rectangle::new(30.0, 30.0))),
@@ -50,7 +47,7 @@ fn setup(
             ..default()
         },
         // Path(bezier),
-        PathComponents(Vec::new()),
+        PathComponents(vec![Vec3::ZERO]),
     ));
 }
 
@@ -67,31 +64,15 @@ fn follow_path (
             gizmos.circle_2d(point.truncate(), 5.0, COLOR_GREEN);
         }
 
-        // Make a CubicCurve from all set of 4 points 
-        let mut bezier_points = Vec::<[Vec3;4]>::new();
+        if points.0.len() > 1 {
+            let bezier = CubicCardinalSpline::new(0.5, points.0.clone()).to_curve();
+            gizmos.linestrip(bezier.iter_positions(points.0.len() * 50), COLOR_WHITE);
 
-        // for chunk in points.0.chunks(4) {
-        //     if let Ok(array) = chunk.try_into() {
-        //         bezier_points.push(array);
-        //     }
-        // }
+            // This version needs at least 3 points. It is smoother, but doesn't pass
+            // through the control point position.
+            // let bezier = CubicBSpline::new(points.0.clone()).to_curve();
+            // gizmos.linestrip(bezier.iter_positions(points.0.len() * 50), COLOR_RED);
 
-        let mut i = 0;
-        while i + 4 < points.0.len() {
-            let chunk: &[Vec3] = &points.0[i..i + 4];
-            i += 4 - 1 ;
-
-            if let Ok(array) = chunk.try_into() {
-                bezier_points.push(array);
-            }
-        }
-
-        if !bezier_points.is_empty() {
-
-            let bezier = CubicBezier::new(bezier_points).to_curve();
-            
-            // Draw the curve
-            gizmos.linestrip(bezier.iter_positions(50), COLOR_WHITE);
             // position takes a point from the curve where 0 is the initial point
             // and 1 is the last point
             transform.translation = bezier.position(t * bezier.segments().len() as f32);
@@ -107,8 +88,13 @@ fn add_points (
     // q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
-        let mut point = query.single_mut();
-        point.0.push(mycoords.0.extend(0.0));
+        let mut points = query.single_mut();
+        points.0.push(mycoords.0.extend(0.0));
+    }
+
+    if buttons.just_pressed(MouseButton::Right) {
+        let mut points = query.single_mut();
+        points.0.clear();
     }
 }
 
