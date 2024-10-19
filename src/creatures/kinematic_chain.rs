@@ -144,14 +144,14 @@ fn backward_kinematics(squeleton: &mut KinematicChain) {
 
 fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gizmos) {
     let node_distance = squeleton.distance;
-    let mut iter = squeleton.nodes.iter_mut().peekable();
+    let mut iter = squeleton.nodes.iter_mut().enumerate().peekable();
 
     let mut skin_left = Vec::<Vec2>::new();
     let mut skin_right = Vec::<Vec2>::new();
     let mut skin_head_tail = Vec::<Vec2>::new();
 
     let offset: Vec3;
-    if let Some(head) = iter.peek() {
+    if let Some((_, head)) = iter.peek() {
         if head.0 != *t_global {
             offset = *t_global;
         } else {
@@ -162,8 +162,8 @@ fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gi
     }
 
     loop {
-        if let Some(head) = iter.next() {
-            if let Some(tail) = iter.peek_mut() {
+        if let Some((i, head)) = iter.next() {
+            if let Some((_, tail)) = iter.peek_mut() {
                 debug!("Looking at {:?} {:?}", head, tail);
 
                 let ray = Ray2d {
@@ -177,15 +177,37 @@ fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gi
                 let right = ray.origin + -ray.direction.perp() * head.1;
                 let back = ray.origin + ray.direction * head.1;
 
+                if i == 0 {
+                    for angle in (15..=60).step_by(15) {
+                        let rotation_angle = (angle as f32).to_radians();
+                        let rotation_vec = Vec2::new(rotation_angle.cos(), rotation_angle.sin());
+
+                        let point = ray.origin + (-ray.direction.rotate(rotation_vec)).normalize() * head.1;
+                        // gizmos.line_2d(ray.origin, point, COLOR_GREEN);
+                        // gizmos.circle_2d(point, 4.0, COLOR_GREEN);
+                        skin_right.push(point);
+                    }
+
+                    for angle in (-60..=-15).rev().step_by(15) {
+                        let rotation_angle = (angle as f32).to_radians();
+                        let rotation_vec = Vec2::new(rotation_angle.cos(), rotation_angle.sin());
+
+                        let point = ray.origin + (-ray.direction.rotate(rotation_vec)).normalize() * head.1;
+                        // gizmos.line_2d(ray.origin, point, COLOR_RED);
+                        // gizmos.circle_2d(point, 4.0, COLOR_RED);
+                        skin_left.push(point);
+                    }
+                }
+
                 skin_left.push(left);
                 skin_right.push(right);
                 skin_head_tail.push(front);
                 skin_head_tail.push(back);
 
-                gizmos.circle_2d(left, 2.0, COLOR_RED);
-                gizmos.circle_2d(right, 2.0, COLOR_RED);
-                gizmos.circle_2d(front, 2.0, COLOR_RED);
-                gizmos.circle_2d(back, 2.0, COLOR_RED);
+                // gizmos.circle_2d(left, 2.0, COLOR_RED);
+                // gizmos.circle_2d(right, 2.0, COLOR_GREEN);
+                // gizmos.circle_2d(front, 2.0, COLOR_RED);
+                // gizmos.circle_2d(back, 2.0, COLOR_RED);
             } else {
                 break;
             }
@@ -212,7 +234,7 @@ fn compute_skin(squeleton: &mut KinematicChain, t_global: &Vec3, gizmos: &mut Gi
             skin_right.push(right);
             skin_head_tail.push(back);
 
-            gizmos.circle_2d(back + offset.truncate(), 5.0, COLOR_RED);
+            // gizmos.circle_2d(back + offset.truncate(), 5.0, COLOR_RED);
             // gizmos.circle_2d(left, 5.0, COLOR_RED);
             // gizmos.circle_2d(right, 5.0, COLOR_BLUE);
         }

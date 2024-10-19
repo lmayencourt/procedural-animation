@@ -165,7 +165,7 @@ fn draw_body(
         let points = squeleton.skin.clone();
 
         for point in &points {
-            gizmos.circle_2d(*point, 5.0, COLOR_GREEN);
+            gizmos.circle_2d(*point, 2.0, COLOR_WHITE);
         }
 
         let shape = shapes::Polygon {
@@ -174,17 +174,5 @@ fn draw_body(
         };
 
         *path = GeometryBuilder::build_as(&shape);
-
-        for node in &squeleton.nodes {
-            commands.spawn((
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Circle { radius: node.1 })),
-                    material: materials.add(COLOR_BLUE),
-                    transform: Transform::from_translation(node.0),
-                    ..default()
-                },
-                Skin,
-            ));
-        }
     }
 }
