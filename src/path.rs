@@ -28,6 +28,9 @@ struct Path(CubicCurve<Vec3>);
 #[derive(Component)]
 struct PathComponents(Vec<Vec3>);
 
+#[derive(Component)]
+struct PathProgress(f32);
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -48,23 +51,37 @@ fn setup(
         },
         // Path(bezier),
         PathComponents(vec![Vec3::ZERO]),
+        PathProgress(0.0),
     ));
 }
 
 fn follow_path (
     mut gizmos: Gizmos,
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &PathComponents)>,
-) {
-    let t = (time.elapsed_seconds().sin() + 1.) / 2.;
+    mut query: Query<(&mut Transform, &mut PathComponents, &mut PathProgress)>,
+) {    
+    for (mut transform, mut points, mut progress) in &mut query {
 
-    for (mut transform, points) in &mut query {
-
+        // Draw the points for reference
         for point in &points.0 {
             gizmos.circle_2d(point.truncate(), 5.0, COLOR_GREEN);
         }
 
+        let target: f32 = (points.0.len() -1) as f32;
+        if progress.0 < target {
+            progress.0 += time.delta_seconds() * 0.4;
+        }
+
+        if progress.0 > target {
+            // We reached the last point. Clear the path
+            points.0.clear();
+            points.0.push(transform.translation);
+        }
+
         if points.0.len() > 1 {
+
+            println!("progress is {}/{}", progress.0, target);
+
             let bezier = CubicCardinalSpline::new(0.5, points.0.clone()).to_curve();
             gizmos.linestrip(bezier.iter_positions(points.0.len() * 50), COLOR_WHITE);
 
@@ -75,26 +92,31 @@ fn follow_path (
 
             // position takes a point from the curve where 0 is the initial point
             // and 1 is the last point
-            transform.translation = bezier.position(t * bezier.segments().len() as f32);
+            // transform.translation = bezier.position(progress.0 * bezier.segments().len() as f32);
+            transform.translation = bezier.position(progress.0);
         }
     }
 }
 
 fn add_points (
     buttons: Res<ButtonInput<MouseButton>>,
-    mut query: Query<( &mut PathComponents)>,
+    mut query: Query<(&Transform, &mut PathComponents, &mut PathProgress)>,
     mut mycoords: ResMut<MyWorldCoords>,
-    // q_window: Query<&Window, With<PrimaryWindow>>,
-    // q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
-        let mut points = query.single_mut();
+        let (pos, mut points, mut progress) = query.single_mut();
         points.0.push(mycoords.0.extend(0.0));
+        // change the first point to be the current position
+        let first = points.0.first_mut().unwrap();
+        *first = pos.translation;
+        progress.0 = 0.0;
     }
 
     if buttons.just_pressed(MouseButton::Right) {
-        let mut points = query.single_mut();
+        let (pos, mut points, mut progress) = query.single_mut();
         points.0.clear();
+        points.0.push(pos.translation);
+        progress.0 = 0.0;
     }
 }
 
