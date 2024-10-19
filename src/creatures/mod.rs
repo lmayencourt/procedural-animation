@@ -129,22 +129,6 @@ fn draw_body(
     mut materials: ResMut<Assets<ColorMaterial>>,
     skins: Query<Entity, With<Skin>>,
 ) {
-    // let points = [[
-    //     Vec3::new(-60., -120., 0.),
-    //     Vec3::new(-520., 380., 0.),
-    //     Vec3::new(520., 380., 0.),
-    //     Vec3::new(60., -120., 0.),
-    // ]];
-
-    // Make a CubicCurve
-    // let bezier = CubicBezier::new(points).to_curve();
-    // gizmos.linestrip(bezier.iter_positions(50), COLOR_BLUE);
-
-    // let curve = points[0];
-    // for p in curve.iter() {
-    //     gizmos.circle_2d(p.truncate(), 5.0, COLOR_BLUE);
-    // }
-
     // Clear all the preview skin shapes
     // This is really not efficient as we re-create every circle at every frame....
     let skins = skins.into_iter();

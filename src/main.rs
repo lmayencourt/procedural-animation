@@ -12,10 +12,12 @@ use bevy_prototype_lyon::prelude::*;
 mod corbusier_colors;
 mod creatures;
 mod water_effect;
+mod path;
 
 use creatures::{kinematic_chain::KinematicChain, Creature, CreaturesPlugin};
 use water_effect::WaterEffectPlugin;
 use corbusier_colors::*;
+use path::PathPlugin;
 
 /// We will store the world position of the mouse cursor here.
 #[derive(Resource, Default)]
@@ -26,15 +28,16 @@ fn main() {
         .add_plugins(EmbeddedAssetPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(ShapePlugin)
-        .add_plugins(CreaturesPlugin)
-        .add_plugins(WaterEffectPlugin)
+        // .add_plugins(CreaturesPlugin)
+        // .add_plugins(WaterEffectPlugin)
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
         .add_systems(Update, my_cursor_system)
-        .add_systems(Update, follow_mouse)
+        // .add_systems(Update, follow_mouse)
         .add_systems(Update, enable_gizmos)
         .add_systems(Update, adapt_windows_size)
-        .add_systems(Update, follow_circle)
+        // .add_systems(Update, follow_circle)
+        .add_plugins(PathPlugin)
         .run();
 }
 
