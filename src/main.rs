@@ -49,8 +49,8 @@ fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>,
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
 
-    for i in 1..6 {
-        let fish = creatures::species::fish::Fish::new(i, COLOR_RED);
+    for i in 1..5 {
+        let fish = creatures::species::fish::Fish::new(i, corbusier_colors::random());
         let entity = fish.spawn(&mut commands, &mut meshes, &mut materials);
         commands.entity(entity).insert((
             Creature,

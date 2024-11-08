@@ -60,9 +60,6 @@ fn setup(
         closed: false,
     };
 
-    let fish = species::fish::Fish::new(10, COLOR_WHITE);
-    fish.spawn(&mut commands, &mut meshes, &mut materials);
-
     let fish = species::fish::Fish::new(10, COLOR_BLUE);
     let playable = fish.spawn(&mut commands, &mut meshes, &mut materials);
 
