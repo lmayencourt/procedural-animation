@@ -61,9 +61,8 @@ fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>,
 
     commands.entity(entity).insert((
         Creature,
-        PathComponents(vec![Vec3::ZERO]),
-        PathProgress(0.0),
-        PathLoop{points, next_idx: 0},
+        PathComponents::new(vec![Vec3::ZERO]),
+        PathLoop::new(points),
     ));
 }
 
