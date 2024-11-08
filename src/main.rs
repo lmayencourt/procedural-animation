@@ -49,13 +49,15 @@ fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>,
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
 
-    for i in 1..5 {
-        let fish = creatures::species::fish::Fish::new(i, corbusier_colors::random());
+    for i in 0..10 {
+        let fish = creatures::species::fish::Fish::random();
         let entity = fish.spawn(&mut commands, &mut meshes, &mut materials);
+        let x_size = 600.0;
+        let y_size = 300.0;
         commands.entity(entity).insert((
             Creature,
             PathComponents::new(vec![Vec3::ZERO]),
-            PathLoop::random(5, -500.0..500.0, -250.0..250.0),
+            PathLoop::random(5, -x_size..x_size, -y_size..y_size),
         ));
     }
 }

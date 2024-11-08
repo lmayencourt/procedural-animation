@@ -7,7 +7,9 @@ use bevy::{
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 use bevy_prototype_lyon::prelude::*;
+use rand::prelude::*;
 
+use crate::corbusier_colors;
 use crate::corbusier_colors::*;
 use crate::creatures::body_parts::*;
 use crate::creatures::body_parts::eye::Eye;
@@ -44,18 +46,23 @@ impl Fish {
     pub fn new(size: usize, color: Color) -> Fish {
         let shape = shapes::RoundedPolygon {
             points: Vec::<Vec2>::new(),
-            radius: size as f32,
+            radius: 1.0,
             closed: false,
         };
 
         Fish {
-            spine: KinematicChain::new(20, 12.0, None),
+            spine: KinematicChain::new(20, size as f32, None),
             skin: ShapeBundle {
                     path: GeometryBuilder::build_as(&shape),
                     ..default()
                 },
             color: Fill::color(color),
         }
+    }
+
+    pub fn random() -> Fish {
+        let size = rand::thread_rng().gen_range(8..18);
+        Self::new(size, corbusier_colors::random())
     }
 
     pub fn spawn (
