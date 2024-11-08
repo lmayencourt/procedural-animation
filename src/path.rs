@@ -8,6 +8,7 @@ use bevy::{
 };
 use bevy_prototype_lyon::prelude::*;
 
+use crate::creatures::{kinematic_chain::KinematicChain, Creature};
 use crate::corbusier_colors::*;
 
 use crate::MyWorldCoords;
@@ -16,7 +17,7 @@ pub struct PathPlugin;
 
 impl Plugin for PathPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        // app.add_systems(Startup, setup);
         app.add_systems(Update, follow_path);
         app.add_systems(Update, add_points);
         app.add_systems(Update, loop_path);
@@ -27,15 +28,15 @@ impl Plugin for PathPlugin {
 struct Path(CubicCurve<Vec3>);
 
 #[derive(Component)]
-struct PathComponents(Vec<Vec3>);
+pub struct PathComponents(pub Vec<Vec3>);
 
 #[derive(Component)]
-struct PathProgress(f32);
+pub struct PathProgress(pub f32);
 
 #[derive(Component)]
-struct PathLoop {
-    points: Vec<Vec3>,
-    next_idx: usize,
+pub struct PathLoop {
+    pub points: Vec<Vec3>,
+    pub next_idx: usize,
 }
 
 fn setup(
@@ -66,9 +67,9 @@ fn setup(
 fn follow_path (
     mut gizmos: Gizmos,
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut PathComponents, &mut PathProgress)>,
-) {    
-    for (mut transform, mut points, mut progress) in &mut query {
+    mut query: Query<(&mut KinematicChain, &mut PathComponents, &mut PathProgress), With<Creature>>,
+) {
+    for (mut squeleton, mut points, mut progress) in &mut query {
 
         // Draw the points for reference
         for point in &points.0 {
@@ -83,7 +84,7 @@ fn follow_path (
         if progress.0 > target {
             // We reached the last point. Clear the path
             points.0.clear();
-            points.0.push(transform.translation);
+            points.0.push(squeleton.target);
             progress.0 = 0.0;
         }
 
@@ -102,7 +103,7 @@ fn follow_path (
             // position takes a point from the curve where 0 is the initial point
             // and 1 is the last point
             // transform.translation = bezier.position(progress.0 * bezier.segments().len() as f32);
-            transform.translation = bezier.position(progress.0);
+            squeleton.target = bezier.position(progress.0);
         }
     }
 }

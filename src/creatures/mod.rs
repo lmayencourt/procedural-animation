@@ -12,7 +12,7 @@ use crate::corbusier_colors::*;
 
 mod body_parts;
 pub mod kinematic_chain;
-mod species;
+pub mod species;
 
 use crate::creatures::kinematic_chain::{reach_target, KinematicChain};
 use body_parts::leg::Leg;
@@ -34,6 +34,10 @@ impl Plugin for CreaturesPlugin {
 
 #[derive(Component)]
 pub struct Creature;
+
+#[derive(Component)]
+pub struct Playable;
+
 
 #[derive(Component)]
 struct Skin;
@@ -62,7 +66,7 @@ fn setup(
     let fish = species::fish::Fish::new(10, COLOR_BLUE);
     let playable = fish.spawn(&mut commands, &mut meshes, &mut materials);
 
-    commands.entity(playable).insert(Creature);
+    commands.entity(playable).insert((Creature, Playable));
 
     commands.entity(playable).with_children(|parent| {
             // Spawn 4 legs

@@ -14,10 +14,10 @@ mod creatures;
 mod water_effect;
 mod path;
 
-use creatures::{kinematic_chain::KinematicChain, Creature, CreaturesPlugin};
+use creatures::{kinematic_chain::KinematicChain, Creature, Playable, CreaturesPlugin};
 use water_effect::WaterEffectPlugin;
 use corbusier_colors::*;
-use path::PathPlugin;
+use path::*;
 
 /// We will store the world position of the mouse cursor here.
 #[derive(Resource, Default)]
@@ -28,7 +28,7 @@ fn main() {
         .add_plugins(EmbeddedAssetPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(ShapePlugin)
-        // .add_plugins(CreaturesPlugin)
+        .add_plugins(CreaturesPlugin)
         // .add_plugins(WaterEffectPlugin)
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
@@ -36,16 +36,35 @@ fn main() {
         // .add_systems(Update, follow_mouse)
         .add_systems(Update, enable_gizmos)
         .add_systems(Update, adapt_windows_size)
-        // .add_systems(Update, follow_circle)
+        .add_systems(Update, follow_circle)
         .add_plugins(PathPlugin)
         .run();
 }
 
-fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>) {
+fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,) {
     commands.spawn(Camera2dBundle::default());
 
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
+
+    let fish = creatures::species::fish::Fish::new(10, COLOR_RED);
+    let entity = fish.spawn(&mut commands, &mut meshes, &mut materials);
+
+    let points = vec![
+        Vec3::new(-60., -120., 0.),
+        Vec3::new(-350., 150., 0.),
+        Vec3::new(350., 150., 0.),
+        Vec3::new(60., -120., 0.),
+    ];
+
+    commands.entity(entity).insert((
+        Creature,
+        PathComponents(vec![Vec3::ZERO]),
+        PathProgress(0.0),
+        PathLoop{points, next_idx: 0},
+    ));
 }
 
 fn my_cursor_system(
@@ -75,7 +94,7 @@ fn my_cursor_system(
 
 fn follow_circle(
     time: Res<Time>,
-    mut q_squeleton: Query<&mut KinematicChain, With<Creature>>,
+    mut q_squeleton: Query<&mut KinematicChain, With<Playable>>,
     buttons: Res<ButtonInput<MouseButton>>,
     touches: Res<Touches>,
     mut gizmos: Gizmos,
@@ -98,7 +117,7 @@ fn follow_mouse(
     buttons: Res<ButtonInput<MouseButton>>,
     touches: Res<Touches>,
     mut mycoords: ResMut<MyWorldCoords>,
-    mut squeleton: Query<&mut KinematicChain, With<Creature>>,
+    mut squeleton: Query<&mut KinematicChain, With<Playable>>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
