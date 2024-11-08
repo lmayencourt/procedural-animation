@@ -19,6 +19,7 @@ impl Plugin for PathPlugin {
         app.add_systems(Startup, setup);
         app.add_systems(Update, follow_path);
         app.add_systems(Update, add_points);
+        app.add_systems(Update, loop_path);
     }
 }
 
@@ -31,17 +32,23 @@ struct PathComponents(Vec<Vec3>);
 #[derive(Component)]
 struct PathProgress(f32);
 
+#[derive(Component)]
+struct PathLoop {
+    points: Vec<Vec3>,
+    next_idx: usize,
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let points = vec![[
+    let points = vec![
         Vec3::new(-60., -120., 0.),
         Vec3::new(-350., 150., 0.),
         Vec3::new(350., 150., 0.),
         Vec3::new(60., -120., 0.),
-    ]];
+    ];
 
     commands.spawn((
         MaterialMesh2dBundle {
@@ -52,6 +59,7 @@ fn setup(
         // Path(bezier),
         PathComponents(vec![Vec3::ZERO]),
         PathProgress(0.0),
+        PathLoop{points, next_idx: 0},
     ));
 }
 
@@ -124,6 +132,30 @@ fn add_points (
         points.0.clear();
         points.0.push(pos.translation);
         progress.0 = 0.0;
+    }
+}
+
+fn loop_path (
+    mut query: Query<(&mut PathLoop, &mut PathComponents, &mut PathProgress)>,
+) {
+    let (mut path_loop, mut points, mut progress) = query.single_mut();
+    if progress.0 == 0.0 {
+        // Initiate the path the the loop points
+        points.0 = path_loop.points.clone();
+    } else if progress.0 > 2.0 {
+        // Remove the first point, after reaching the second,
+        // in order to keep the curve smooth.
+        points.0.drain(0..1);
+        progress.0 = 1.0;
+
+        // add new target point
+        points.0.push(path_loop.points[path_loop.next_idx]);
+
+        if path_loop.next_idx < path_loop.points.len()-1 {
+            path_loop.next_idx += 1;
+        } else {
+            path_loop.next_idx = 0;
+        }
     }
 }
 
