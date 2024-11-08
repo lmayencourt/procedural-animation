@@ -49,21 +49,15 @@ fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>,
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
 
-    let fish = creatures::species::fish::Fish::new(10, COLOR_RED);
-    let entity = fish.spawn(&mut commands, &mut meshes, &mut materials);
-
-    let points = vec![
-        Vec3::new(-60., -120., 0.),
-        Vec3::new(-350., 150., 0.),
-        Vec3::new(350., 150., 0.),
-        Vec3::new(60., -120., 0.),
-    ];
-
-    commands.entity(entity).insert((
-        Creature,
-        PathComponents::new(vec![Vec3::ZERO]),
-        PathLoop::new(points),
-    ));
+    for i in 1..6 {
+        let fish = creatures::species::fish::Fish::new(i, COLOR_RED);
+        let entity = fish.spawn(&mut commands, &mut meshes, &mut materials);
+        commands.entity(entity).insert((
+            Creature,
+            PathComponents::new(vec![Vec3::ZERO]),
+            PathLoop::random(5, -500.0..500.0, -250.0..250.0),
+        ));
+    }
 }
 
 fn my_cursor_system(

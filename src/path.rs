@@ -2,11 +2,14 @@
 * Copyright (c) 2024 Louis Mayencourt
 */
 
+use std::ops::Range;
+
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 use bevy_prototype_lyon::prelude::*;
+use rand::prelude::*;
 
 use crate::creatures::{kinematic_chain::KinematicChain, Creature};
 use crate::corbusier_colors::*;
@@ -19,7 +22,7 @@ impl Plugin for PathPlugin {
     fn build(&self, app: &mut App) {
         // app.add_systems(Startup, setup);
         app.add_systems(Update, follow_path);
-        app.add_systems(Update, add_points);
+        // app.add_systems(Update, add_points);
         app.add_systems(Update, loop_path);
     }
 }
@@ -50,6 +53,23 @@ pub struct PathLoop {
 
 impl PathLoop {
     pub fn new(points: Vec<Vec3>) -> Self {
+        Self {
+            points,
+            next_idx: 0,
+        }
+    }
+
+    pub fn random(count: usize, x_range: Range<f32>, y_range: Range<f32>) -> Self {
+        let mut points = Vec::new();
+        for _ in 0..count {
+            let vec = Vec3::new(
+                rand::thread_rng().gen_range(x_range.clone()),
+                rand::thread_rng().gen_range(y_range.clone()),
+                rand::thread_rng().gen_range(x_range.clone())
+            );
+            points.push(vec);
+        }
+
         Self {
             points,
             next_idx: 0,
@@ -155,23 +175,24 @@ fn add_points (
 fn loop_path (
     mut query: Query<(&mut PathLoop, &mut PathComponents)>,
 ) {
-    let (mut path_loop, mut path) = query.single_mut();
-    if path.progress == 0.0 {
-        // Initiate the path the the loop points
-        path.points = path_loop.points.clone();
-    } else if path.progress > 2.0 {
-        // Remove the first point, after reaching the second,
-        // in order to keep the curve smooth.
-        path.points.drain(0..1);
-        path.progress = 1.0;
+    for (mut path_loop, mut path) in &mut query {
+        if path.progress == 0.0 {
+            // Initiate the path the the loop points
+            path.points = path_loop.points.clone();
+        } else if path.progress > 2.0 {
+            // Remove the first point, after reaching the second,
+            // in order to keep the curve smooth.
+            path.points.drain(0..1);
+            path.progress = 1.0;
 
-        // add new target point
-        path.points.push(path_loop.points[path_loop.next_idx]);
+            // add new target point
+            path.points.push(path_loop.points[path_loop.next_idx]);
 
-        if path_loop.next_idx < path_loop.points.len()-1 {
-            path_loop.next_idx += 1;
-        } else {
-            path_loop.next_idx = 0;
+            if path_loop.next_idx < path_loop.points.len()-1 {
+                path_loop.next_idx += 1;
+            } else {
+                path_loop.next_idx = 0;
+            }
         }
     }
 }

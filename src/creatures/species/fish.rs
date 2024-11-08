@@ -44,7 +44,7 @@ impl Fish {
     pub fn new(size: usize, color: Color) -> Fish {
         let shape = shapes::RoundedPolygon {
             points: Vec::<Vec2>::new(),
-            radius: 1.,
+            radius: size as f32,
             closed: false,
         };
 
