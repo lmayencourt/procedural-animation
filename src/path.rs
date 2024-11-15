@@ -139,6 +139,8 @@ fn follow_path (
             // and 1 is the last point
             // transform.translation = bezier.position(path.progress * bezier.segments().len() as f32);
             squeleton.target = bezier.position(path.progress);
+            // We build a random Vec3, fix the z to 0.0 for now
+            squeleton.target.z = 0.0;
         }
     }
 }

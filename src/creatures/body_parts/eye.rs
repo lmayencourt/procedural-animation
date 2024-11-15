@@ -33,12 +33,6 @@ pub fn draw_eye(
                 let left = ray.origin + ray.direction.perp() * anchor_node.1 * 0.75;
                 let right = ray.origin + -ray.direction.perp() * anchor_node.1 * 0.75;
 
-                gizmos.line_2d(
-                    ray.origin,
-                    ray.origin + *ray.direction * distance,
-                    COLOR_GREEN,
-                );
-
                 match eye.position {
                     BodyPartPosition::Dorsal => {
                         transform.translation = anchor_node.0;

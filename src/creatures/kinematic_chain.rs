@@ -19,7 +19,7 @@ impl KinematicChain {
     pub fn new(count: usize, distance: f32, anchor: Option<Vec3>) -> Self {
         let mut nodes = Vec::<(Vec3, f32)>::new();
         for _ in 0..count {
-            nodes.push((Vec3::new(0.0, distance, 0.0), distance/count as f32));
+            nodes.push((Vec3::new(0.0, distance, 0.0), distance));
         }
         KinematicChain {
             anchor,
@@ -63,21 +63,32 @@ pub fn reach_target(
     mut gizmos: Gizmos,
 ) {
     for (mut squeleton, t_global) in squeletons.iter_mut() {
-        let target = squeleton.target;
-        if let Some(head) = squeleton.nodes.first_mut() {
-            head.0 = target;
-        }
-
-        forward_kinematics(&mut squeleton, &mut gizmos);
-
-        if let Some(anchor) = squeleton.anchor {
-            if let Some(tail) = squeleton.nodes.last_mut() {
-                tail.0 = anchor;
+        // perform a few iteration to stabilize before drawing body
+        for i in 0..10 {
+            let target = squeleton.target;
+            if let Some(head) = squeleton.nodes.first_mut() {
+                head.0 = target;
             }
 
-            backward_kinematics(&mut squeleton);
-        }
+            forward_kinematics(&mut squeleton, &mut gizmos);
 
+            if let Some(anchor) = squeleton.anchor {
+                if let Some(tail) = squeleton.nodes.last_mut() {
+                    tail.0 = anchor;
+                }
+                backward_kinematics(&mut squeleton);
+            }
+
+            if squeleton_angles_are_ok(&mut squeleton, &mut gizmos) {
+                if i > 0 {
+                    debug!("All good at {}", i);
+                }
+                break;
+            } else {
+                correct_angle(&mut squeleton, &mut gizmos);
+                debug!("Correcting angle {}", i);
+            }
+        }
         compute_skin(&mut squeleton, &t_global.translation(), &mut gizmos);
     }
 }
@@ -103,13 +114,9 @@ fn forward_kinematics(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
                     tail.0.y = new_position.y;
                 }
 
-                gizmos.line_2d(
-                    ray.origin,
-                    ray.origin + *ray.direction * distance,
-                    COLOR_WHITE,
-                );
                 gizmos.circle_2d(head.0.truncate(), head.1, COLOR_WHITE);
                 gizmos.circle_2d(tail.0.truncate(), tail.1, COLOR_WHITE);
+                gizmos.line(head.0, tail.0, COLOR_WHITE);
 
                 // gizmos.circle_2d(front, 5.0, COLOR_WHITE);
                 // gizmos.circle_2d(left, 5.0, COLOR_WHITE);
@@ -153,6 +160,80 @@ fn backward_kinematics(squeleton: &mut KinematicChain) {
         } else {
             break;
         }
+    }
+}
+use std::cell::Cell;
+
+fn squeleton_angles_are_ok(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) -> bool {
+    for (i, nodes) in squeleton.nodes.windows(3).enumerate() {
+        let n0 = nodes[0].0;
+        let n1 = nodes[1].0;
+        let n2 = nodes[2].0;
+
+        let segment_1 = n1 - n0;
+        let segment_2 = n2 - n1;
+
+        let angle = segment_1.angle_between(segment_2).to_degrees();
+        let cross_product = segment_1.cross(segment_2);
+        let clockwise = Vec3::Z.angle_between(cross_product) > 0.0;
+
+        let max_angle: f32 = 20.0;
+
+        if angle > max_angle {
+            debug!("angle {} is {}, {}", i, angle, clockwise);
+            return false;
+        }
+    }
+
+    true
+}
+
+fn correct_angle(squeleton: &mut KinematicChain, gizmos: &mut Gizmos) {
+    let mut points = Vec::new();
+    for point in &mut squeleton.nodes {
+        points.push(point.0);
+    }
+    let slice = &mut points[..];
+    let slice_of_cells: &[Cell<Vec3>] = Cell::from_mut(slice).as_slice_of_cells();
+    for (i, nodes) in slice_of_cells.windows(3).enumerate() {
+        let n0 = nodes[0].get();
+        let n1 = nodes[1].get();
+        let n2 = nodes[2].get();
+
+        let segment_1 = n1 - n0;
+        let segment_2 = n2 - n1;
+
+        let angle = segment_1.angle_between(segment_2).to_degrees();
+        let cross_product = segment_1.cross(segment_2);
+        let clockwise = Vec3::Z.angle_between(cross_product) > 0.0;
+        debug!("angle {} is {}, {}", i, angle, clockwise);
+
+        // gizmos.arrow_2d(Vec2::ZERO, segment_1.truncate(), COLOR_GREEN);
+        // gizmos.arrow_2d(Vec2::ZERO, segment_2.truncate(), COLOR_GREEN);
+
+        let max_angle: f32 = 20.0;
+
+        if angle > max_angle {
+            // gizmos.arrow_2d(n1.truncate(), segment_1.truncate() + n1.truncate(), COLOR_BLUE);
+            // gizmos.arrow_2d(n1.truncate(), segment_2.truncate() + n1.truncate(), COLOR_RED);
+
+            let quat = if clockwise {
+                Quat::from_axis_angle(Vec3::Z, -max_angle.to_radians())
+            } else {
+                Quat::from_axis_angle(Vec3::Z, max_angle.to_radians())
+            };
+            let rotated_segment = quat * segment_1.normalize() * segment_2.length();
+            let point = rotated_segment + n1;
+            nodes[2].set(point);
+
+            // gizmos.arrow_2d(Vec2::ZERO, rotated_segment.truncate(), COLOR_BLUE);
+            gizmos.arrow_2d(n1.truncate(), rotated_segment.truncate() + n1.truncate(), COLOR_BLUE);
+        }
+    }
+
+    // Resign the points to the squeleton
+    for (i, point) in points.iter().enumerate() {
+        squeleton.nodes[i].0 = *point;
     }
 }
 
