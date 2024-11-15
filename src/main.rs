@@ -5,17 +5,20 @@
 use bevy::{
     prelude::*,
     window::{PrimaryWindow, WindowResized},
+    diagnostic::FrameTimeDiagnosticsPlugin,
 };
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_prototype_lyon::prelude::*;
 
 mod corbusier_colors;
 mod creatures;
+mod fps_counter;
 mod water_effect;
 mod path;
 
 use creatures::{kinematic_chain::KinematicChain, Creature, Playable, CreaturesPlugin};
 use water_effect::WaterEffectPlugin;
+use fps_counter::FpsDisplay;
 use corbusier_colors::*;
 use path::*;
 
@@ -27,6 +30,8 @@ fn main() {
     App::new()
         .add_plugins(EmbeddedAssetPlugin::default())
         .add_plugins(DefaultPlugins)
+        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(FpsDisplay)
         .add_plugins(ShapePlugin)
         .add_plugins(CreaturesPlugin)
         // .add_plugins(WaterEffectPlugin)
