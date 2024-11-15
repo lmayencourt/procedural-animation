@@ -98,13 +98,13 @@ fn follow_circle(
         let circle_radius = 150.0;
         gizmos.circle_2d(Vec2::ZERO, circle_radius, COLOR_WHITE);
 
-        let mut squeleton = q_squeleton.single_mut();
-
-        let t = time.elapsed_seconds();
-        squeleton.target = Vec3::new(f32::cos(t), f32::sin(t), 0.0);
-        squeleton.target *= circle_radius;
-        squeleton.target.x += f32::cos(t*5.0) * 10.0;
-        squeleton.target.y += f32::sin(t*5.0) * 10.0;
+        if let Ok(mut squeleton) = q_squeleton.get_single_mut() {
+            let t = time.elapsed_seconds();
+            squeleton.target = Vec3::new(f32::cos(t), f32::sin(t), 0.0);
+            squeleton.target *= circle_radius;
+            squeleton.target.x += f32::cos(t*5.0) * 10.0;
+            squeleton.target.y += f32::sin(t*5.0) * 10.0;
+        }
     }
 }
 
@@ -117,14 +117,14 @@ fn follow_mouse(
     q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     if buttons.pressed(MouseButton::Left) {
-        let mut squeleton = squeleton.single_mut();
+        if let Ok(mut squeleton) = squeleton.get_single_mut() {
+            squeleton.target = mycoords.0.extend(0.0);
 
-        squeleton.target = mycoords.0.extend(0.0);
-
-        // if let Some(head) = squeleton.nodes.first_mut() {
-        //     head.0.x = mycoords.0.x;
-        //     head.0.y = mycoords.0.y;
-        // }
+            // if let Some(head) = squeleton.nodes.first_mut() {
+                //     head.0.x = mycoords.0.x;
+                //     head.0.y = mycoords.0.y;
+                // }
+            }
     }
 
     for finger in touches.iter() {
