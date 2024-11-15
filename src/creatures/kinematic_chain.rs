@@ -18,6 +18,20 @@ pub struct KinematicChain {
 impl KinematicChain {
     pub fn new(count: usize, distance: f32, anchor: Option<Vec3>) -> Self {
         let mut nodes = Vec::<(Vec3, f32)>::new();
+        for _ in 0..count {
+            nodes.push((Vec3::new(0.0, distance, 0.0), distance/count as f32));
+        }
+        KinematicChain {
+            anchor,
+            target: Vec3::new(0.0, distance*count as f32, 0.0),
+            distance,
+            nodes,
+            skin: Vec::new(),
+        }
+    }
+
+    pub fn fish_like(count: usize, distance: f32, anchor: Option<Vec3>) -> Self {
+        let mut nodes = Vec::<(Vec3, f32)>::new();
         // first 1/6 nodes rises from size to create an head like shape
         let nose = count / 6;
         for n in 0..nose {

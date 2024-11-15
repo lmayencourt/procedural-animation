@@ -32,7 +32,7 @@ impl Default for Fish {
         };
 
         Fish {
-            spine: KinematicChain::new(20, 12.0, None),
+            spine: KinematicChain::fish_like(20, 12.0, None),
             skin: ShapeBundle {
                     path: GeometryBuilder::build_as(&shape),
                     ..default()
@@ -51,7 +51,7 @@ impl Fish {
         };
 
         Fish {
-            spine: KinematicChain::new(20, size as f32, None),
+            spine: KinematicChain::fish_like(20, size as f32, None),
             skin: ShapeBundle {
                     path: GeometryBuilder::build_as(&shape),
                     ..default()
