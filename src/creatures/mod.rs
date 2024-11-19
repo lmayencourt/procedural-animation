@@ -22,7 +22,7 @@ pub struct CreaturesPlugin;
 
 impl Plugin for CreaturesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        // app.add_systems(Startup, setup);
         app.add_systems(Update, reach_target);
         app.add_systems(Update, draw_body);
         app.add_systems(Update, body_parts::fin::draw_fin);

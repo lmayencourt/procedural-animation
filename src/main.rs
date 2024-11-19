@@ -38,10 +38,10 @@ fn main() {
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
         .add_systems(Update, my_cursor_system)
-        // .add_systems(Update, follow_mouse)
+        .add_systems(Update, follow_mouse)
         .add_systems(Update, enable_gizmos)
         .add_systems(Update, adapt_windows_size)
-        .add_systems(Update, follow_circle)
+        // .add_systems(Update, follow_circle)
         .add_plugins(PathPlugin)
         .run();
 }
