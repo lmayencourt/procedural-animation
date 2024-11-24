@@ -17,7 +17,7 @@ mod water_effect;
 mod path;
 
 use creatures::{kinematic_chain::KinematicChain, Creature, Playable, CreaturesPlugin};
-use water_effect::WaterEffectPlugin;
+use water_effect::{WaterEffectPlugin, TextureCamera};
 use fps_counter::FpsDisplay;
 use corbusier_colors::*;
 use path::*;
@@ -34,7 +34,7 @@ fn main() {
         .add_plugins(FpsDisplay)
         .add_plugins(ShapePlugin)
         .add_plugins(CreaturesPlugin)
-        // .add_plugins(WaterEffectPlugin)
+        .add_plugins(WaterEffectPlugin)
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
         .add_systems(Update, my_cursor_system)
@@ -72,7 +72,7 @@ fn my_cursor_system(
     // query to get the window (so we can read the current cursor position)
     q_window: Query<&Window, With<PrimaryWindow>>,
     // query to get camera transform
-    q_camera: Query<(&Camera, &GlobalTransform)>,
+    q_camera: Query<(&Camera, &GlobalTransform), Without<TextureCamera>>,
 ) {
     // get the camera info and transform
     // assuming there is exactly one main camera entity, so Query::single() is OK
