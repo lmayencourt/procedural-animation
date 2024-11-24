@@ -49,7 +49,6 @@ fn main() {
 fn setup(mut commands: Commands, mut config_store: ResMut<GizmoConfigStore>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,) {
-    commands.spawn(Camera2dBundle::default());
 
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.enabled = false;
