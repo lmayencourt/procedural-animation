@@ -23,12 +23,22 @@ impl Material2d for WaterMaterial {
     }
 }
 
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct WaterFloorMaterial {}
+
+impl Material2d for WaterFloorMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "embedded://shaders/water_floor.wgsl".into()
+    }
+}
+
 /// Plugin for easy integration in application
 pub struct WaterEffectPlugin;
 
 impl Plugin for WaterEffectPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Material2dPlugin::<WaterMaterial>::default());
+        app.add_plugins(Material2dPlugin::<WaterFloorMaterial>::default());
         app.add_systems(Startup, setup);
     }
 }
@@ -40,6 +50,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut water_material: ResMut<Assets<WaterMaterial>>,
+    mut water_floor_material: ResMut<Assets<WaterFloorMaterial>>,
     mut images: ResMut<Assets<Image>>,
     windows: Query<&Window>,
 ) {
@@ -85,6 +96,14 @@ fn setup(
             ..default()
         },
     ));
+
+    // water floor
+    // commands.spawn(MaterialMesh2dBundle {
+    //     mesh: Mesh2dHandle(meshes.add(Rectangle::new(windows.width(), windows.height()))),
+    //     transform: Transform::from_xyz(0.0, 0.0, -1.0),
+    //     material: water_floor_material.add(WaterFloorMaterial {}),
+    //     ..default()
+    // });
 
     // Second camera that display the texture shader
     commands.spawn((
