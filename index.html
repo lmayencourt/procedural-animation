@@ -5,7 +5,67 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         
         <title>Procedural animation</title>
-    <link rel="modulepreload" href="./procedural-animation-61f616dd903efa17.js" crossorigin=anonymous integrity="sha384-Yidrr6mczzK5Rbq4c2NZ+wgQB29cFM5v8vxzugpH/1/uvf8QCwj2ZcBleIAn5cWo"><link rel="preload" href="./procedural-animation-61f616dd903efa17_bg.wasm" crossorigin=anonymous integrity="sha384-X7BA1hDDBpV05Q/x18DBjbN6P0K7i1aoFkjvnf+lGvcp56GTUNuoYaG3fqVu0U9s" as="fetch" type="application/wasm"></head>
+        <script>
+            // This script ensures that the audio will start playing when opening the page.
+            // Source: https://developer.chrome.com/blog/web-audio-autoplay
+            (function () {
+            // An array of all contexts to resume on the page
+            const audioContextList = [];
+
+            // An array of various user interaction events we should listen for
+            const userInputEventNames = [
+                'click',
+                'contextmenu',
+                'auxclick',
+                'dblclick',
+                'mousedown',
+                'mouseup',
+                'pointerup',
+                'touchend',
+                'keydown',
+                'keyup',
+            ];
+
+            // A proxy object to intercept AudioContexts and
+            // add them to the array for tracking and resuming later
+            self.AudioContext = new Proxy(self.AudioContext, {
+                construct(target, args) {
+                const result = new target(...args);
+                audioContextList.push(result);
+                return result;
+                },
+            });
+
+            // To resume all AudioContexts being tracked
+            function resumeAllContexts(event) {
+                let count = 0;
+
+                audioContextList.forEach(context => {
+                if (context.state !== 'running') {
+                    context.resume();
+                } else {
+                    count++;
+                }
+                });
+
+                // If all the AudioContexts have now resumed then we
+                // unbind all the event listeners from the page to prevent
+                // unnecessary resume attempts
+                if (count == audioContextList.length) {
+                userInputEventNames.forEach(eventName => {
+                    document.removeEventListener(eventName, resumeAllContexts);
+                });
+                }
+            }
+
+            // We bind the resume function for each user interaction
+            // event on the page
+            userInputEventNames.forEach(eventName => {
+                document.addEventListener(eventName, resumeAllContexts);
+            });
+            })();
+        </script>
+    <link rel="modulepreload" href="./procedural-animation-a28da27cd8e0acdd.js" crossorigin="anonymous" integrity="sha384-k6qclsfXcQQMhFS3jngTN/jgP149FYfAH3BBC0ZDLC38Kwtex6d+Ol81wAce94Cu"><link rel="preload" href="./procedural-animation-a28da27cd8e0acdd_bg.wasm" crossorigin="anonymous" integrity="sha384-1wEoyPGtIMBl1U3/+aGYfgWPR5+iREp24AGRR/o745KPEB0cXfj/kswFpe64KiZ+" as="fetch" type="application/wasm"></head>
     <body>
         <div class="game-container">
             <div class="lds-dual-ring"></div>
@@ -14,9 +74,9 @@
             </canvas>
         </div>
     
-<script type="module" nonce="7n7eAHF35JRIOC2HwHT96w==">
-import init, * as bindings from './procedural-animation-61f616dd903efa17.js';
-const wasm = await init({ module_or_path: './procedural-animation-61f616dd903efa17_bg.wasm' });
+<script type="module">
+import init, * as bindings from './procedural-animation-a28da27cd8e0acdd.js';
+const wasm = await init({ module_or_path: './procedural-animation-a28da27cd8e0acdd_bg.wasm' });
 
 
 window.wasmBindings = bindings;
