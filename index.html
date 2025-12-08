@@ -5,68 +5,125 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         
         <title>Procedural animation</title>
-        <script>
-            // This script ensures that the audio will start playing when opening the page.
-            // Source: https://developer.chrome.com/blog/web-audio-autoplay
-            (function () {
-            // An array of all contexts to resume on the page
-            const audioContextList = [];
+        <style>/* Copied from: https://github.com/NiklasEi/bevy_game_template/blob/main/build/web/styles.css */
 
-            // An array of various user interaction events we should listen for
-            const userInputEventNames = [
-                'click',
-                'contextmenu',
-                'auxclick',
-                'dblclick',
-                'mousedown',
-                'mouseup',
-                'pointerup',
-                'touchend',
-                'keydown',
-                'keyup',
-            ];
+body, html {
+    height: 100%;
+}
 
-            // A proxy object to intercept AudioContexts and
-            // add them to the array for tracking and resuming later
-            self.AudioContext = new Proxy(self.AudioContext, {
-                construct(target, args) {
-                const result = new target(...args);
-                audioContextList.push(result);
-                return result;
-                },
-            });
+body {
+    background-color: rgb(100, 100, 100);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-            // To resume all AudioContexts being tracked
-            function resumeAllContexts(event) {
-                let count = 0;
+.game-container {
+    /* width: 800px;
+    height: 600px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-                audioContextList.forEach(context => {
-                if (context.state !== 'running') {
-                    context.resume();
-                } else {
-                    count++;
-                }
-                });
+.lds-dual-ring {
+    display: inline-block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 80px;
+    height: 80px;
+}
 
-                // If all the AudioContexts have now resumed then we
-                // unbind all the event listeners from the page to prevent
-                // unnecessary resume attempts
-                if (count == audioContextList.length) {
-                userInputEventNames.forEach(eventName => {
-                    document.removeEventListener(eventName, resumeAllContexts);
-                });
-                }
-            }
+.lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 6px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+}
 
-            // We bind the resume function for each user interaction
-            // event on the page
-            userInputEventNames.forEach(eventName => {
-                document.addEventListener(eventName, resumeAllContexts);
-            });
-            })();
-        </script>
+@keyframes lds-dual-ring {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+#bevy {
+    z-index: 2;
+}</style>
     <link rel="modulepreload" href="./procedural-animation-ba449925c4f4c1a1.js" crossorigin="anonymous" integrity="sha384-Urpvhwk2pSwlWlKrMjedvqVb3vCWNVSNTmpqVlpVCZyQ6WKjDGsHlkFSKlnAosyO"><link rel="preload" href="./procedural-animation-ba449925c4f4c1a1_bg.wasm" crossorigin="anonymous" integrity="sha384-D+Uqn0KBlfJefpxc7NaQ9WvT7FXUeCjhOX0CvdokWb8WRvcfNO/RCSaqtOpXitbc" as="fetch" type="application/wasm"></head>
     <body>
+        <script>// Insert hack to make sound autoplay on Chrome as soon as the user interacts with the tab:
+// https://developers.google.com/web/updates/2018/11/web-audio-autoplay#moving-forward
+
+// the following function keeps track of all AudioContexts and resumes them on the first user
+// interaction with the page. If the function is called and all contexts are already running,
+// it will remove itself from all event listeners.
+(function () {
+    // An array of all contexts to resume on the page
+    const audioContextList = [];
+
+    // An array of various user interaction events we should listen for
+    const userInputEventNames = [
+        "click",
+        "contextmenu",
+        "auxclick",
+        "dblclick",
+        "mousedown",
+        "mouseup",
+        "pointerup",
+        "touchend",
+        "keydown",
+        "keyup",
+    ];
+
+    // A proxy object to intercept AudioContexts and
+    // add them to the array for tracking and resuming later
+    self.AudioContext = new Proxy(self.AudioContext, {
+        construct(target, args) {
+            const result = new target(...args);
+            audioContextList.push(result);
+            return result;
+        },
+    });
+
+    // To resume all AudioContexts being tracked
+    function resumeAllContexts(_event) {
+        let count = 0;
+
+        audioContextList.forEach((context) => {
+            if (context.state !== "running") {
+                context.resume();
+            } else {
+                count++;
+            }
+        });
+
+        // If all the AudioContexts have now resumed then we unbind all
+        // the event listeners from the page to prevent unnecessary resume attempts
+        // Checking count > 0 ensures that the user interaction happens AFTER the game started up
+        if (count > 0 && count === audioContextList.length) {
+            userInputEventNames.forEach((eventName) => {
+                document.removeEventListener(eventName, resumeAllContexts);
+            });
+        }
+    }
+
+    // We bind the resume function for each user interaction
+    // event on the page
+    userInputEventNames.forEach((eventName) => {
+        document.addEventListener(eventName, resumeAllContexts);
+    });
+})();</script>
         <div class="game-container">
             <div class="lds-dual-ring"></div>
             <canvas id="bevy">
