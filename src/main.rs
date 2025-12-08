@@ -10,12 +10,14 @@ use bevy::{
 use bevy_embedded_assets::EmbeddedAssetPlugin;
 use bevy_prototype_lyon::prelude::*;
 
+mod audio;
 mod corbusier_colors;
 mod creatures;
 mod fps_counter;
 mod water_effect;
 mod path;
 
+use audio::AudioPlugin;
 use creatures::{kinematic_chain::KinematicChain, Creature, Playable, CreaturesPlugin};
 use water_effect::{WaterEffectPlugin, TextureCamera};
 use fps_counter::FpsDisplay;
@@ -35,6 +37,7 @@ fn main() {
         .add_plugins(ShapePlugin)
         .add_plugins(CreaturesPlugin)
         .add_plugins(WaterEffectPlugin)
+        .add_plugins(AudioPlugin)
         .add_systems(Startup, setup)
         .init_resource::<MyWorldCoords>()
         .add_systems(Update, my_cursor_system)
