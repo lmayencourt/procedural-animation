@@ -6,6 +6,7 @@ use bevy::{
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef, Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages},
     render::view::RenderLayers,
+    render::camera::ScalingMode,
     sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle, Mesh2dHandle},
 };
 
@@ -106,10 +107,10 @@ fn setup(
     // });
 
     // Second camera that display the texture shader
+    let mut camera = Camera2dBundle::default();
+    camera.projection.scaling_mode = ScalingMode::FixedVertical(780.0);
     commands.spawn((
-        Camera2dBundle {
-            ..default()
-        },
+        camera,
         TextureCamera,
         RenderLayers::layer(1),
     ));
