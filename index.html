@@ -22,6 +22,7 @@ body {
 .game-container {
     /* width: 800px;
     height: 600px; */
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -60,7 +61,7 @@ body {
 #bevy {
     z-index: 2;
 }</style>
-    <link rel="modulepreload" href="./procedural-animation-ba449925c4f4c1a1.js" crossorigin="anonymous" integrity="sha384-Urpvhwk2pSwlWlKrMjedvqVb3vCWNVSNTmpqVlpVCZyQ6WKjDGsHlkFSKlnAosyO"><link rel="preload" href="./procedural-animation-ba449925c4f4c1a1_bg.wasm" crossorigin="anonymous" integrity="sha384-D+Uqn0KBlfJefpxc7NaQ9WvT7FXUeCjhOX0CvdokWb8WRvcfNO/RCSaqtOpXitbc" as="fetch" type="application/wasm"></head>
+    <link rel="modulepreload" href="./procedural-animation-a972df5ccca597bd.js" crossorigin="anonymous" integrity="sha384-6empGVAxUoRoTpYWLpsOmbtHdaWZMM+6kUbaGrX3pqeNuvAu32bh2W6jy6fTwSQf"><link rel="preload" href="./procedural-animation-a972df5ccca597bd_bg.wasm" crossorigin="anonymous" integrity="sha384-5mbb+CsTZLE7hLpL3uuzvXqabflzQBZSXpptWhrHjv+rtx871VY52iUGwMSUEtiV" as="fetch" type="application/wasm"></head>
     <body>
         <script>// Insert hack to make sound autoplay on Chrome as soon as the user interacts with the tab:
 // https://developers.google.com/web/updates/2018/11/web-audio-autoplay#moving-forward
@@ -132,8 +133,8 @@ body {
         </div>
     
 <script type="module">
-import init, * as bindings from './procedural-animation-ba449925c4f4c1a1.js';
-const wasm = await init({ module_or_path: './procedural-animation-ba449925c4f4c1a1_bg.wasm' });
+import init, * as bindings from './procedural-animation-a972df5ccca597bd.js';
+const wasm = await init({ module_or_path: './procedural-animation-a972df5ccca597bd_bg.wasm' });
 
 
 window.wasmBindings = bindings;
